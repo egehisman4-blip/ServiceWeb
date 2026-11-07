@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Araç Servis Takip Ekranı</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 min-h-screen text-slate-100 font-sans flex flex-col justify-between">
+
+    <!-- Üst Başlık & Dükkan Bilgisi -->
+    <header class="bg-slate-800 border-b border-slate-700 py-4 px-6 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 p-2.5 rounded-xl text-white">
+                    <i class="fa-solid fa-car-side text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-white" id="displayShopName">OtoServis Pro</h1>
+                    <p class="text-xs text-slate-400" id="displayShopContact">Canlı Araç Durum Takip Sistemi</p>
+                </div>
+            </div>
+            <div class="text-right text-xs text-slate-400 hidden sm:block">
+                <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
+                <span>Canlı Bağlantı Aktif</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto w-full px-4 py-8 flex-1 space-y-6">
+
+        <!-- Plaka Sorgulama Kartı -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
+            <h2 class="text-base font-bold text-white mb-3 flex items-center">
+                <i class="fa-solid fa-magnifying-glass text-blue-500 mr-2"></i>Plakanız İle Aracınızı Sorgulayın
+            </h2>
+            <form onsubmit="handleSearch(event)" class="flex gap-3">
+                <input type="text" id="searchPlate" placeholder="Örn: 34EGE408" required
+                    class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white uppercase font-extrabold tracking-wider focus:border-blue-500 focus:outline-none text-lg">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-lg shadow-blue-600/20">
+                    Sorgula
+                </button>
+            </form>
+        </div>
+
+        <!-- Yükleniyor Uyarısı -->
+        <div id="loading" class="hidden text-center py-12">
+            <div class="inline-block w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-sm text-slate-400 mt-3">Servis verileri getiriliyor...</p>
+        </div>
+
+        <!-- Hata Uyarısı -->
+        <div id="errorBox" class="hidden bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center text-red-400">
+            <i class="fa-solid fa-circle-exclamation text-3xl mb-2"></i>
+            <p class="font-semibold text-sm" id="errorMessage">Plakaya ait servis kaydı bulunamadı.</p>
+        </div>
+
+        <!-- Müşteri Detay Kartı (Sorgulama Sonucu) -->
+        <div id="resultBox" class="hidden space-y-6">
+
+            <!-- Araç Bilgi Özet Kartı -->
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 flex flex-wrap justify-between items-center gap-4">
+                <div>
+                    <span class="bg-blue-600 text-white font-black font-mono px-3 py-1 rounded-lg text-lg tracking-widest" id="resPlate"></span>
+                    <h3 class="text-xl font-extrabold text-white mt-2" id="resCar"></h3>
+                    <p class="text-xs text-slate-400 mt-0.5" id="resOwner"></p>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-slate-400 block">Toplam Tutar</span>
+                    <span class="text-2xl font-black text-emerald-400" id="resTotalCost">0 ₺</span>
+                </div>
+            </div>
+
+            <!-- Canlı Servis İlerleme Çubuğu (Status Timeline) -->
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+                <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-6 flex items-center">
+                    <i class="fa-solid fa-clock-rotate-left text-amber-500 mr-2"></i>Servis Aşama Durumu
+                </h3>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-center" id="statusGrid"></div>
+            </div>
+
+            <!-- Yapılan İşlemler & Değişen Parça Listesi -->
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+                <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center">
+                    <i class="fa-solid fa-wrench text-blue-500 mr-2"></i>Değişen Parça & İşçilik Detayları
+                </h3>
+                <div id="itemsContainer" class="space-y-2 divide-y divide-slate-700/60"></div>
+            </div>
+
+            <!-- Usta Notu -->
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+                <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center">
+                    <i class="fa-solid fa-user-doctor text-emerald-500 mr-2"></i>Servis & Usta Teşhis Notu
+                </h3>
+                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 text-slate-300 text-sm italic" id="resNote">
+                    Henüz not eklenmedi.
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Alt Bilgi -->
+    <footer class="bg-slate-800 border-t border-slate-700 py-4 text-center text-xs text-slate-500">
+        <p id="footerText">© 2026 OtoServis Pro - Canlı Takip Altyapısı</p>
+    </footer>
+
+    <script>
+        const statusMap = [
+            { id: 1, name: "Kabul Edildi", icon: "fa-clipboard-check" },
+            { id: 2, name: "Teşhis Yapılıyor", icon: "fa-magnifying-glass-wrench" },
+            { id: 3, name: "Parça Bekliyor", icon: "fa-box-open" },
+            { id: 4, name: "İşlemde", icon: "fa-gears" },
+            { id: 5, name: "Test Sürüşünde", icon: "fa-gauge-high" },
+            { id: 6, name: "Hazır / Teslim", icon: "fa-circle-check" }
+        ];
+
+        let currentVehicleData = null;
+
+        window.onload = function() {
+            loadShopInfo();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const plateParam = urlParams.get('plate');
+            if (plateParam) {
+                document.getElementById('searchPlate').value = plateParam;
+                searchVehicle(plateParam);
+            }
+        };
+
+        async function loadShopInfo() {
+            try {
+                const res = await fetch('/api/Services/shop-settings');
+                if (res.ok) {
+                    const shop = await res.json();
+                    const shopName = shop.shopName || shop.ShopName || "OtoServis Pro";
+                    const phone = shop.phone || shop.Phone || "";
+                    
+                    document.getElementById('displayShopName').innerText = shopName;
+                    if (phone) {
+                        document.getElementById('displayShopContact').innerText = `İletişim: ${phone} | Canlı Araç Takip`;
+                    }
+                    document.getElementById('footerText').innerText = `© 2026 ${shopName} - Dijital Takip Altyapısı`;
+                }
+            } catch (e) {}
+        }
+
+        function handleSearch(e) {
+            e.preventDefault();
+            const plate = document.getElementById('searchPlate').value.trim();
+            if (plate) {
+                searchVehicle(plate);
+            }
+        }
+
+        async function searchVehicle(plate) {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('resultBox').classList.add('hidden');
+            document.getElementById('errorBox').classList.add('hidden');
+
+            try {
+                const res = await fetch(`/api/Services/search/${encodeURIComponent(plate)}`);
+                document.getElementById('loading').classList.add('hidden');
+
+                if (res.ok) {
+                    currentVehicleData = await res.json();
+                    renderVehicleDetails(currentVehicleData);
+                } else {
+                    document.getElementById('errorMessage').innerText = "Bu plakaya ait aktif bir servis kaydı bulunamadı.";
+                    document.getElementById('errorBox').classList.remove('hidden');
+                }
+            } catch (err) {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('errorMessage').innerText = "Bağlantı hatası oluştu.";
+                document.getElementById('errorBox').classList.remove('hidden');
+            }
+        }
+
+        async function updateCustomerKm(vehicleId) {
+            const inputKm = document.getElementById('custKmInput').value;
+            if (!inputKm || inputKm <= 0) {
+                alert('Lütfen geçerli bir kilometre girin.');
+                return;
+            }
+
+            const payload = {
+                plate: currentVehicleData.plate || currentVehicleData.Plate,
+                brand: currentVehicleData.brand || currentVehicleData.Brand,
+                model: currentVehicleData.model || currentVehicleData.Model,
+                year: currentVehicleData.year || currentVehicleData.Year,
+                currentKm: parseInt(inputKm),
+                ownerName: currentVehicleData.ownerName || currentVehicleData.OwnerName,
+                ownerPhone: currentVehicleData.ownerPhone || currentVehicleData.OwnerPhone
+            };
+
+            try {
+                const res = await fetch(`/api/Services/update-vehicle/${vehicleId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    alert('Kilometreniz başarıyla güncellendi! Periyodik bakım takibiniz bu değere göre yapılacaktır.');
+                    searchVehicle(currentVehicleData.plate || currentVehicleData.Plate);
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    alert(`Kilometre güncellenirken hata oluştu: ${err.message || res.statusText}`);
+                }
+            } catch (err) {
+                alert('Bağlantı hatası.');
+            }
+        }
+
+        function renderVehicleDetails(data) {
+            document.getElementById('resPlate').innerText = data.plate || data.Plate;
+            document.getElementById('resCar').innerText = `${data.brand || data.Brand} ${data.model || data.Model} (${data.year || data.Year})`;
+            document.getElementById('resOwner').innerText = `Müşteri: ${data.ownerName || data.OwnerName}`;
+
+            const records = data.serviceRecords || data.ServiceRecords || [];
+            if (records.length === 0) {
+                document.getElementById('errorMessage').innerText = "Araca ait işlem geçmişi yok.";
+                document.getElementById('errorBox').classList.remove('hidden');
+                return;
+            }
+
+            const lastRec = records[records.length - 1];
+            const currentStatus = lastRec.status || lastRec.Status || 1;
+
+            document.getElementById('resTotalCost').innerText = `${lastRec.totalCost || lastRec.TotalCost || 0} ₺`;
+            document.getElementById('resNote').innerText = lastRec.mechanicNote || lastRec.MechanicNote || "İşlem ile ilgili not eklenmedi.";
+
+            // Müşteri KM Güncelleme Kartı
+            let kmBox = document.getElementById('customerKmBox');
+            if (!kmBox) {
+                kmBox = document.createElement('div');
+                kmBox.id = 'customerKmBox';
+                kmBox.className = 'bg-slate-800 border border-slate-700 rounded-2xl p-4 flex flex-wrap justify-between items-center gap-3';
+                document.getElementById('resultBox').insertBefore(kmBox, document.getElementById('resultBox').children[1]);
+            }
+            
+            const currentKmVal = data.currentKm !== undefined ? data.currentKm : data.CurrentKm;
+            kmBox.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <div class="bg-amber-500/20 text-amber-400 p-2.5 rounded-xl">
+                        <i class="fa-solid fa-gauge-high text-lg"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-white">Güncel Araç Kilometreniz</h4>
+                        <p class="text-xs text-slate-400">Sistemdeki Son Kayıt: <strong class="text-amber-400 font-mono">${currentKmVal} KM</strong></p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 w-full sm:w-auto">
+                    <input type="number" id="custKmInput" placeholder="Örn: ${currentKmVal}" 
+                        class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono font-bold w-32 focus:outline-none focus:border-amber-500">
+                    <button onclick="updateCustomerKm(${data.id || data.Id})" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all">
+                        KM Güncelle
+                    </button>
+                </div>
+            `;
+
+            // Aşama İlerleme Çubuğu
+            const statusGrid = document.getElementById('statusGrid');
+            statusGrid.innerHTML = '';
+            statusMap.forEach(st => {
+                const isActive = st.id === currentStatus;
+                const isPassed = st.id < currentStatus;
+
+                let cardBg = "bg-slate-900/60 border-slate-700/60 text-slate-500";
+                if (isActive) {
+                    cardBg = "bg-blue-600/20 border-blue-500 text-blue-400 font-bold scale-105 shadow-lg shadow-blue-500/10";
+                } else if (isPassed) {
+                    cardBg = "bg-emerald-500/10 border-emerald-500/40 text-emerald-400";
+                }
+
+                statusGrid.innerHTML += `
+                    <div class="border rounded-xl p-3 flex flex-col items-center justify-center transition-all ${cardBg}">
+                        <i class="fa-solid ${st.icon} text-lg mb-2"></i>
+                        <span class="text-xs">${st.name}</span>
+                    </div>
+                `;
+            });
+
+            // Değişen Parça Listesi
+            const itemsContainer = document.getElementById('itemsContainer');
+            itemsContainer.innerHTML = '';
+            const items = lastRec.serviceItems || lastRec.ServiceItems || [];
+            
+            if (items.length > 0) {
+                items.forEach(item => {
+                    const desc = item.description || item.Description;
+                    const price = item.price !== undefined ? item.price : item.Price;
+                    itemsContainer.innerHTML += `
+                        <div class="pt-2 flex justify-between items-center text-sm">
+                            <span class="text-slate-300 font-medium">${desc}</span>
+                            <span class="font-bold text-amber-400 font-mono">${price} ₺</span>
+                        </div>
+                    `;
+                });
+            } else {
+                itemsContainer.innerHTML = `<p class="text-xs text-slate-500 py-2">Parça/işçilik kaydı girilmedi.</p>`;
+            }
+
+            // GEÇMİŞ SERVİS KARTLARINI ÇİZ
+            let historyBox = document.getElementById('historyBox');
+            if (!historyBox) {
+                historyBox = document.createElement('div');
+                historyBox.id = 'historyBox';
+                historyBox.className = 'bg-slate-800 border border-slate-700 rounded-2xl p-6';
+                document.getElementById('resultBox').appendChild(historyBox);
+            }
+
+            if (records.length > 1) {
+                let hHtml = `
+                    <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center">
+                        <i class="fa-solid fa-history text-amber-500 mr-2"></i>Önceki Servis & Bakım Geçmişi
+                    </h3>
+                    <div class="space-y-3">
+                `;
+
+                records.slice(0, records.length - 1).reverse().forEach(rec => {
+                    const dateStr = new Date(rec.entryDate || rec.EntryDate).toLocaleDateString('tr-TR');
+                    const items = rec.serviceItems || rec.ServiceItems || [];
+                    const itemsStr = items.length > 0 ? items.map(i => i.description || i.Description).join(', ') : 'İşlem detaylandırılmadı.';
+
+                    hHtml += `
+                        <div class="bg-slate-900/60 border border-slate-700/80 p-3.5 rounded-xl text-xs flex flex-wrap justify-between items-center gap-2">
+                            <div>
+                                <span class="font-bold text-blue-400 block mb-0.5">${dateStr} Tarihli Bakım</span>
+                                <span class="text-slate-300">${itemsStr}</span>
+                            </div>
+                            <span class="font-extrabold text-emerald-400 font-mono text-sm">${rec.totalCost || rec.TotalCost || 0} ₺</span>
+                        </div>
+                    `;
+                });
+
+                hHtml += `</div>`;
+                historyBox.innerHTML = hHtml;
+                historyBox.classList.remove('hidden');
+            } else {
+                historyBox.classList.add('hidden');
+            }
+
+            document.getElementById('resultBox').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

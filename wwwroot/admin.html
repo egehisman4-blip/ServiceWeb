@@ -81,6 +81,31 @@
         </div>
     </div>
 
+    <!-- GEÇMİŞ SERVİS KAYITLARI MODALI (AYRI PENCERE) -->
+    <div id="historyModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[95] flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-2xl rounded-2xl p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center">
+                        <i class="fa-solid fa-clock-rotate-left text-blue-400 mr-2"></i>Geçmiş Servis & Bakım Arşivi
+                    </h3>
+                    <p class="text-xs text-slate-400" id="modalHistorySubtitle">Araç Servis Geçmişi</p>
+                </div>
+                <button onclick="toggleHistoryModal(false)" class="text-slate-400 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="modalHistoryList" class="space-y-3 overflow-y-auto pr-1 flex-1">
+                <!-- Geçmiş kayıtlar JS ile buraya yüklenecek -->
+            </div>
+            <div class="pt-2 border-t border-slate-700 flex justify-end">
+                <button onclick="toggleHistoryModal(false)" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-xl text-xs font-semibold transition-all">
+                    Kapat
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ANA PANEL HEADER -->
     <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
@@ -111,7 +136,7 @@
 
     <main class="max-w-7xl mx-auto px-4 py-8 space-y-8">
         
-        <!-- Üst Alan: Periyodik Bakım Hatırlatıcı Kartı -->
+        <!-- Periyodik Bakım Kartı -->
         <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-bold text-white flex items-center">
@@ -143,7 +168,7 @@
             </div>
         </div>
 
-        <!-- Alt Alan: Sol Kayıt Formu / Sağ İşlem Alanı -->
+        <!-- Sol Kayıt Formu / Sağ İşlem Alanı -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Sol Kolon: Yeni Araç Formu -->
             <div class="lg:col-span-1 bg-slate-800 border border-slate-700 rounded-2xl p-6 h-fit">
@@ -153,13 +178,13 @@
                 <form id="createVehicleForm" onsubmit="handleCreateVehicle(event)" class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Plaka</label>
-                        <input type="text" id="plate" placeholder="Örn: 34EGE408" required
+                        <input type="text" id="plaka" placeholder="Örn: 34KEB128" required
                             class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white uppercase font-bold focus:border-blue-500 focus:outline-none">
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Marka</label>
-                            <input type="text" id="brand" placeholder="Peugeot" required
+                            <input type="text" id="marka" placeholder="Peugeot" required
                                 class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-blue-500 focus:outline-none">
                         </div>
                         <div>
@@ -171,28 +196,28 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Yıl</label>
-                            <input type="number" id="year" value="2024" required
+                            <input type="number" id="yil" value="2024" required
                                 class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-blue-500 focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Mevcut KM</label>
-                            <input type="number" id="currentKm" placeholder="15000" required
+                            <input type="number" id="mevcutKm" placeholder="63300" required
                                 class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-blue-500 focus:outline-none">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Müşteri Ad Soyad</label>
-                        <input type="text" id="ownerName" placeholder="Ege Hışman" required
+                        <input type="text" id="musteriAdSoyad" placeholder="Ege Hışman" required
                             class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Müşteri Telefon</label>
-                        <input type="text" id="ownerPhone" placeholder="05551112233" required
+                        <input type="text" id="musteriTelefon" placeholder="05528674965" required
                             class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Usta Notu / Teşhis</label>
-                        <textarea id="mechanicNote" rows="2" placeholder="Örn: Yağ değişimi ve fren balataları kontrol ediliyor."
+                        <textarea id="ustaNotu" rows="2" placeholder="Örn: Yağ değişimi ve fren balataları kontrol ediliyor."
                             class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:border-blue-500 focus:outline-none"></textarea>
                     </div>
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-600/20">
@@ -209,7 +234,7 @@
                     </h2>
                     
                     <div class="flex gap-3 mb-6">
-                        <input type="text" id="adminSearchPlate" placeholder="Plaka Girin (Örn: 34EGE408)" 
+                        <input type="text" id="searchPlaka" placeholder="Plaka Girin (Örn: 34KEB128)" 
                             class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white uppercase font-bold focus:border-blue-500 focus:outline-none">
                         <button onclick="fetchAdminVehicle()" class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-all">
                             Ara
@@ -217,15 +242,19 @@
                     </div>
 
                     <div id="adminResult" class="hidden space-y-6 bg-slate-900/60 p-5 border border-slate-700/80 rounded-xl">
-                        <!-- Araç Başlık & Silme Butonu -->
+                        <!-- Araç Başlık & Aksiyonlar -->
                         <div class="flex flex-wrap justify-between items-center border-b border-slate-700 pb-3 gap-2">
                             <div>
                                 <span class="bg-blue-600 text-white font-bold font-mono px-2.5 py-1 rounded text-sm" id="admPlate"></span>
                                 <span class="text-white font-semibold ml-2" id="admCar"></span>
                             </div>
-                            <div class="flex items-center space-x-3">
-                                <span class="text-xs text-slate-400" id="admOwner"></span>
-                                <button onclick="deleteCurrentVehicle()" class="bg-red-500/20 text-red-400 hover:bg-red-500/30 px-3 py-1 rounded-lg text-xs font-bold transition-all">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs text-slate-400 mr-2" id="admOwner"></span>
+                                <button onclick="toggleHistoryModal(true)" class="bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border border-blue-500/30 px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center space-x-1">
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                    <span>Geçmiş Kayıtları İncele</span>
+                                </button>
+                                <button onclick="deleteCurrentVehicle()" class="bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 px-3 py-1 rounded-lg text-xs font-bold transition-all">
                                     <i class="fa-solid fa-trash mr-1"></i> Aracın Kaydını Sil
                                 </button>
                             </div>
@@ -259,7 +288,6 @@
                                     Ekle
                                 </button>
                             </form>
-                            <!-- Eklenen Parçaların Listesi -->
                             <div id="admItemList" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
                         </div>
 
@@ -283,506 +311,512 @@
                     </div>
                 </div>
             </div>
+        </main>
+
+        <!-- PDF Şablonu -->
+        <div class="hidden">
+            <div id="pdfTemplate" class="p-8 bg-white text-slate-900 font-sans" style="width: 700px;">
+                <div class="flex justify-between items-center border-b-2 border-slate-900 pb-4 mb-6">
+                    <div>
+                        <h1 class="text-2xl font-black text-slate-900 tracking-wider" id="pdfShopTitle">OTOSERVİS PRO</h1>
+                        <p class="text-xs text-slate-500" id="pdfShopAddress">Teknik Servis & Bakım İş Emri Formu</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-slate-400 block">Tarih</span>
+                        <span class="font-bold text-sm text-slate-800" id="pdfDate"></span>
+                        <span class="text-xs text-slate-500 block mt-1" id="pdfShopIban"></span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg mb-6 border border-slate-200">
+                    <div>
+                        <div class="text-xs text-slate-400 uppercase font-semibold">Araç Bilgileri</div>
+                        <div class="text-lg font-black text-slate-900" id="pdfPlate"></div>
+                        <div class="text-sm font-semibold text-slate-700" id="pdfCar"></div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-slate-400 uppercase font-semibold">Müşteri Bilgileri</div>
+                        <div class="text-base font-bold text-slate-900" id="pdfOwner"></div>
+                        <div class="text-xs text-slate-600" id="pdfPhone"></div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Yapılan İşlemler & Parçalar</div>
+                    <div id="pdfItemsList" class="divide-y divide-slate-200 border-t border-b border-slate-200 mb-4"></div>
+                    <div class="text-right font-black text-xl text-slate-900" id="pdfTotalCost"></div>
+                </div>
+
+                <div class="mb-6">
+                    <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Servis / Usta Teşhis Notu</div>
+                    <div class="p-3 bg-slate-100 rounded border border-slate-200 text-sm italic text-slate-800" id="pdfNote"></div>
+                </div>
+
+                <div class="border-t-2 border-slate-900 pt-6 mt-12 flex justify-between items-center">
+                    <div class="text-xs text-slate-400" id="pdfFooterBrand">Bu belge OtoServis Pro dijital altyapısı ile oluşturulmuştur.</div>
+                    <div class="text-center">
+                        <div class="text-xs text-slate-400 mb-8">Servis Yetkilisi İmza</div>
+                        <div class="border-b border-slate-400 w-32"></div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </main>
 
-    <!-- PDF Şablonu -->
-    <div class="hidden">
-        <div id="pdfTemplate" class="p-8 bg-white text-slate-900 font-sans" style="width: 700px;">
-            <div class="flex justify-between items-center border-b-2 border-slate-900 pb-4 mb-6">
-                <div>
-                    <h1 class="text-2xl font-black text-slate-900 tracking-wider" id="pdfShopTitle">OTOSERVİS PRO</h1>
-                    <p class="text-xs text-slate-500" id="pdfShopAddress">Teknik Servis & Bakım İş Emri Formu</p>
-                </div>
-                <div class="text-right">
-                    <span class="text-xs text-slate-400 block">Tarih</span>
-                    <span class="font-bold text-sm text-slate-800" id="pdfDate"></span>
-                    <span class="text-xs text-slate-500 block mt-1" id="pdfShopIban"></span>
-                </div>
-            </div>
+        <script>
+            const ADMIN_PASS = "1234";
+            const baseUrl = window.location.origin;
+            let shopData = { shopName: "OtoServis Pro", phone: "", address: "", iban: "", logoUrl: "" };
 
-            <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg mb-6 border border-slate-200">
-                <div>
-                    <div class="text-xs text-slate-400 uppercase font-semibold">Araç Bilgileri</div>
-                    <div class="text-lg font-black text-slate-900" id="pdfPlate"></div>
-                    <div class="text-sm font-semibold text-slate-700" id="pdfCar"></div>
-                </div>
-                <div class="text-right">
-                    <div class="text-xs text-slate-400 uppercase font-semibold">Müşteri Bilgileri</div>
-                    <div class="text-base font-bold text-slate-900" id="pdfOwner"></div>
-                    <div class="text-xs text-slate-600" id="pdfPhone"></div>
-                </div>
-            </div>
-
-            <div class="mb-6">
-                <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Yapılan İşlemler & Parçalar</div>
-                <div id="pdfItemsList" class="divide-y divide-slate-200 border-t border-b border-slate-200 mb-4"></div>
-                <div class="text-right font-black text-xl text-slate-900" id="pdfTotalCost"></div>
-            </div>
-
-            <div class="mb-6">
-                <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Servis / Usta Teşhis Notu</div>
-                <div class="p-3 bg-slate-100 rounded border border-slate-200 text-sm italic text-slate-800" id="pdfNote"></div>
-            </div>
-
-            <div class="border-t-2 border-slate-900 pt-6 mt-12 flex justify-between items-center">
-                <div class="text-xs text-slate-400" id="pdfFooterBrand">Bu belge OtoServis Pro dijital altyapısı ile oluşturulmuştur.</div>
-                <div class="text-center">
-                    <div class="text-xs text-slate-400 mb-8">Servis Yetkilisi İmza</div>
-                    <div class="border-b border-slate-400 w-32"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const ADMIN_PASS = "1234";
-        // CANLI SUNUCU ADRESİ
-        const baseUrl = window.location.origin;
-        let shopData = { shopName: "OtoServis Pro", phone: "", address: "", iban: "", logoUrl: "" };
-
-        window.onload = function() {
-            if (sessionStorage.getItem("adminAuth") === "true") {
-                document.getElementById("loginOverlay").classList.add("hidden");
-                loadShopSettings();
-                fetchUpcomingMaintenances();
-            }
-        };
-
-        function handleLogin(e) {
-            e.preventDefault();
-            const pass = document.getElementById("adminPassword").value;
-            if (pass === ADMIN_PASS) {
-                sessionStorage.setItem("adminAuth", "true");
-                document.getElementById("loginOverlay").classList.add("hidden");
-                loadShopSettings();
-                fetchUpcomingMaintenances();
-            } else {
-                document.getElementById("loginError").classList.remove("hidden");
-            }
-        }
-
-        function logout() {
-            sessionStorage.removeItem("adminAuth");
-            location.reload();
-        }
-
-        function toggleSettingsModal(show) {
-            const modal = document.getElementById("settingsModal");
-            if (show) modal.classList.remove("hidden");
-            else modal.classList.add("hidden");
-        }
-
-        async function loadShopSettings() {
-            try {
-                const res = await fetch('/api/Services/shop-settings');
-                if (res.ok) {
-                    shopData = await res.json();
-                    const sName = shopData.shopName || shopData.ShopName || 'OtoServis Pro';
-                    document.getElementById('headerShopTitle').innerText = `${sName} - Usta Paneli`;
-                    document.getElementById('cfgShopName').value = sName;
-                    document.getElementById('cfgPhone').value = shopData.phone || shopData.Phone || '';
-                    document.getElementById('cfgIban').value = shopData.iban || shopData.Iban || '';
-                    document.getElementById('cfgAddress').value = shopData.address || shopData.Address || '';
-                    document.getElementById('cfgLogoUrl').value = shopData.logoUrl || shopData.LogoUrl || '';
-                }
-            } catch (err) {}
-        }
-
-        async function saveShopSettings(e) {
-            e.preventDefault();
-            const payload = {
-                shopName: document.getElementById('cfgShopName').value.trim(),
-                phone: document.getElementById('cfgPhone').value.trim(),
-                iban: document.getElementById('cfgIban').value.trim(),
-                address: document.getElementById('cfgAddress').value.trim(),
-                logoUrl: document.getElementById('cfgLogoUrl').value.trim()
-            };
-
-            try {
-                const res = await fetch('/api/Services/shop-settings', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (res.ok) {
-                    alert('Dükkan ayarları başarıyla kaydedildi!');
-                    toggleSettingsModal(false);
+            window.onload = function() {
+                if (sessionStorage.getItem("adminAuth") === "true") {
+                    document.getElementById("loginOverlay").classList.add("hidden");
                     loadShopSettings();
-                } else {
-                    const errData = await res.json().catch(() => ({}));
-                    alert(`Ayarlar kaydedilemedi: ${errData.message || res.statusText}`);
+                    fetchUpcomingMaintenances();
                 }
-            } catch (err) {
-                alert(`Bağlantı hatası: ${err.message}`);
-            }
-        }
-
-        let currentRecordId = null;
-        let currentVehicleData = null;
-
-        const statusTextMap = {
-            1: "Kabul Edildi",
-            2: "Teşhis Yapılıyor",
-            3: "Parça Bekliyor",
-            4: "İşlemde",
-            5: "Test Sürüşünde",
-            6: "Hazır / Teslim Edildi"
-        };
-
-        async function fetchUpcomingMaintenances() {
-            const tbody = document.getElementById('maintenanceTableBody');
-            try {
-                const res = await fetch('/api/Services/upcoming-maintenances');
-                if (res.ok) {
-                    const list = await res.json();
-                    tbody.innerHTML = '';
-                    if (list.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">Kayıtlı araç bulunmuyor.</td></tr>`;
-                        return;
-                    }
-                    list.forEach(v => {
-                        const plate = v.plate || v.Plate || v.plaka || v.Plaka;
-                        const brand = v.brand || v.Brand || v.marka || v.Marka;
-                        const model = v.model || v.Model;
-                        const ownerName = v.ownerName || v.OwnerName || v.musteriAdSoyad || v.MusteriAdSoyad;
-                        const ownerPhone = v.ownerPhone || v.OwnerPhone || v.musteriTelefon || v.MusteriTelefon;
-                        const currentKm = v.currentKm !== undefined ? v.currentKm : (v.mevcutKm !== undefined ? v.mevcutKm : v.CurrentKm);
-                        const nextKm = v.nextKm !== undefined ? v.nextKm : (v.hedefKm !== undefined ? v.hedefKm : v.NextKm);
-
-                        tbody.innerHTML += `
-                            <tr class="hover:bg-slate-800/80 transition-all">
-                                <td class="p-3 font-mono font-bold text-blue-400">${plate}</td>
-                                <td class="p-3 font-semibold text-white">${brand} ${model}</td>
-                                <td class="p-3">${ownerName} (${ownerPhone})</td>
-                                <td class="p-3 font-mono">${currentKm} KM</td>
-                                <td class="p-3 font-mono text-amber-400 font-bold">${nextKm || (currentKm + 10000)} KM</td>
-                                <td class="p-3 text-right">
-                                    <button onclick="sendMaintenanceReminder('${ownerName}', '${ownerPhone}', '${plate}', '${brand}', '${model}', ${currentKm})"
-                                        class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition-all flex items-center space-x-1 ml-auto">
-                                        <i class="fa-brands fa-whatsapp"></i>
-                                        <span>Bakım Mesajı At</span>
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                } else {
-                    tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400">Veriler alırken sunucu hatası oluştu.</td></tr>`;
-                }
-            } catch (err) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400">Bağlantı hatası.</td></tr>`;
-            }
-        }
-
-        function sendMaintenanceReminder(name, phoneRaw, plate, brand, model, currentKm) {
-            let phone = phoneRaw.replace(/\D/g, '');
-            if (phone.startsWith('0')) phone = '90' + phone.substring(1);
-            if (!phone.startsWith('90')) phone = '90' + phone;
-
-            const trackUrl = `${baseUrl}/index.html?plate=${encodeURIComponent(plate)}`;
-            const senderName = shopData.shopName || shopData.ShopName || "OtoServis Pro";
-
-            const targetKm = (Math.floor(currentKm / 10000) + 1) * 10000;
-
-            const msg = `Sayın ${name},\n\n${senderName} bünyesindeki ${plate} plakalı ${brand} ${model} aracınızın ${currentKm} KM seviyesine ulaşması nedeniyle yaklaşan ${targetKm} KM periyodik yağ & filtre bakım zamanı gelmiştir.\n\nGüncel kilometre bilgilerinizi bildirmek ve canlı takip için tıklayın:\n${trackUrl}`;
-
-            window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`, '_blank');
-        }
-
-        // HATA ÇÖZÜCÜ EKLENMİŞ ARAÇ GİRİŞ KAYDI (Backend Pascal/camel Uyumlu)
-        async function handleCreateVehicle(e) {
-            e.preventDefault();
-            const currKm = parseInt(document.getElementById('currentKm').value) || 0;
-            const rawPlate = document.getElementById('plate').value.trim().toUpperCase();
-
-            // Hem PascalCase hem camelCase uyarlandı (C# backend çakışmalarını sıfırlar)
-            const payload = {
-                plate: rawPlate,
-                plaka: rawPlate,
-                brand: document.getElementById('brand').value.trim(),
-                marka: document.getElementById('brand').value.trim(),
-                model: document.getElementById('model').value.trim(),
-                year: parseInt(document.getElementById('year').value) || 2024,
-                yil: parseInt(document.getElementById('year').value) || 2024,
-                currentKm: currKm,
-                mevcutKm: currKm,
-                ownerName: document.getElementById('ownerName').value.trim(),
-                musteriAdSoyad: document.getElementById('ownerName').value.trim(),
-                ownerPhone: document.getElementById('ownerPhone').value.trim(),
-                musteriTelefon: document.getElementById('ownerPhone').value.trim(),
-                ustaNotu: document.getElementById('mechanicNote').value.trim(),
-                serviceRecords: [
-                    {
-                        status: 1,
-                        totalCost: 0,
-                        mechanicNote: document.getElementById('mechanicNote').value.trim(),
-                        nextMaintenanceKm: (Math.floor(currKm / 10000) + 1) * 10000
-                    }
-                ]
             };
 
-            try {
-                const res = await fetch('/api/Services/create-vehicle', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (res.ok) {
-                    alert('Araç ve Servis Kaydı Başarıyla Açıldı!');
-                    document.getElementById('createVehicleForm').reset();
+            function handleLogin(e) {
+                e.preventDefault();
+                const pass = document.getElementById("adminPassword").value;
+                if (pass === ADMIN_PASS) {
+                    sessionStorage.setItem("adminAuth", "true");
+                    document.getElementById("loginOverlay").classList.add("hidden");
+                    loadShopSettings();
                     fetchUpcomingMaintenances();
                 } else {
-                    const errText = await res.text();
-                    alert('Kayıt oluşturulurken hata oluştu: ' + errText);
+                    document.getElementById("loginError").classList.remove("hidden");
                 }
-            } catch (err) {
-                alert('Bağlantı hatası: ' + err.message);
             }
-        }
 
-        async function fetchAdminVehicle() {
-            const plate = document.getElementById('adminSearchPlate').value.trim();
-            if (!plate) return;
-
-            const res = await fetch(`/api/Services/search/${encodeURIComponent(plate)}`);
-            if (res.ok) {
-                currentVehicleData = await res.json();
-                renderAdminView();
-            } else {
-                alert('Araç bulunamadı.');
+            function logout() {
+                sessionStorage.removeItem("adminAuth");
+                location.reload();
             }
-        }
 
-        function renderAdminView() {
-            if (!currentVehicleData) return;
-            const plate = currentVehicleData.plate || currentVehicleData.Plate || currentVehicleData.plaka || currentVehicleData.Plaka;
-            const brand = currentVehicleData.brand || currentVehicleData.Brand || currentVehicleData.marka || currentVehicleData.Marka;
-            const model = currentVehicleData.model || currentVehicleData.Model;
-            const ownerName = currentVehicleData.ownerName || currentVehicleData.OwnerName || currentVehicleData.musteriAdSoyad || currentVehicleData.MusteriAdSoyad;
-            const ownerPhone = currentVehicleData.ownerPhone || currentVehicleData.OwnerPhone || currentVehicleData.musteriTelefon || currentVehicleData.MusteriTelefon;
+            function toggleSettingsModal(show) {
+                const modal = document.getElementById("settingsModal");
+                if (show) modal.classList.remove("hidden");
+                else modal.classList.add("hidden");
+            }
 
-            document.getElementById('admPlate').innerText = plate;
-            document.getElementById('admCar').innerText = `${brand} ${model}`;
-            document.getElementById('admOwner').innerText = `${ownerName} (${ownerPhone})`;
+            function toggleHistoryModal(show) {
+                const modal = document.getElementById("historyModal");
+                if (show) modal.classList.remove("hidden");
+                else modal.classList.add("hidden");
+            }
 
-            const records = currentVehicleData.serviceRecords || currentVehicleData.ServiceRecords || [];
+            async function loadShopSettings() {
+                try {
+                    const res = await fetch('/api/Services/shop-settings');
+                    if (res.ok) {
+                        shopData = await res.json();
+                        const sName = shopData.shopName || shopData.ShopName || 'OtoServis Pro';
+                        document.getElementById('headerShopTitle').innerText = `${sName} - Usta Paneli`;
+                        document.getElementById('cfgShopName').value = sName;
+                        document.getElementById('cfgPhone').value = shopData.phone || shopData.Phone || '';
+                        document.getElementById('cfgIban').value = shopData.iban || shopData.Iban || '';
+                        document.getElementById('cfgAddress').value = shopData.address || shopData.Address || '';
+                        document.getElementById('cfgLogoUrl').value = shopData.logoUrl || shopData.LogoUrl || '';
+                    }
+                } catch (err) {}
+            }
 
-            if (records.length > 0) {
-                const lastRec = records[records.length - 1];
-                currentRecordId = lastRec.id || lastRec.Id;
-                document.getElementById('admStatusSelect').value = lastRec.status || lastRec.Status || 1;
-                document.getElementById('admTotalCost').innerText = `${lastRec.totalCost || lastRec.TotalCost || 0} ₺`;
+            async function saveShopSettings(e) {
+                e.preventDefault();
+                const payload = {
+                    shopName: document.getElementById('cfgShopName').value.trim(),
+                    phone: document.getElementById('cfgPhone').value.trim(),
+                    iban: document.getElementById('cfgIban').value.trim(),
+                    address: document.getElementById('cfgAddress').value.trim(),
+                    logoUrl: document.getElementById('cfgLogoUrl').value.trim()
+                };
 
-                const itemListDiv = document.getElementById('admItemList');
-                itemListDiv.innerHTML = '';
-                const items = lastRec.serviceItems || lastRec.ServiceItems || [];
+                try {
+                    const res = await fetch('/api/Services/shop-settings', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
 
-                if (items.length > 0) {
-                    items.forEach(item => {
-                        const itemId = item.id || item.Id;
-                        const desc = item.description || item.Description;
-                        const price = item.price !== undefined ? item.price : item.Price;
+                    if (res.ok) {
+                        alert('Dükkan ayarları başarıyla kaydedildi!');
+                        toggleSettingsModal(false);
+                        loadShopSettings();
+                    } else {
+                        const errData = await res.json().catch(() => ({}));
+                        alert(`Ayarlar kaydedilemedi: ${errData.message || res.statusText}`);
+                    }
+                } catch (err) {
+                    alert(`Bağlantı hatası: ${err.message}`);
+                }
+            }
 
-                        itemListDiv.innerHTML += `
-                            <div class="flex justify-between items-center bg-slate-800 p-2.5 rounded-lg text-xs">
-                                <span class="text-slate-200 font-medium">${desc}</span>
-                                <div class="flex items-center space-x-3">
-                                    <span class="font-bold text-amber-400">${price} ₺</span>
-                                    <button onclick="deleteItem(${itemId})" class="text-red-400 hover:text-red-300">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
+            let currentRecordId = null;
+            let currentVehicleData = null;
+
+            const statusTextMap = {
+                1: "Kabul Edildi",
+                2: "Teşhis Yapılıyor",
+                3: "Parça Bekliyor",
+                4: "İşlemde",
+                5: "Test Sürüşünde",
+                6: "Hazır / Teslim Edildi"
+            };
+
+            function getVal(id) {
+                const el = document.getElementById(id);
+                return el ? el.value.trim() : "";
+            }
+
+            async function fetchUpcomingMaintenances() {
+                const tbody = document.getElementById('maintenanceTableBody');
+                try {
+                    const res = await fetch('/api/Services/upcoming-maintenances');
+                    if (res.ok) {
+                        const list = await res.json();
+                        tbody.innerHTML = '';
+                        if (list.length === 0) {
+                            tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">Kayıtlı araç bulunmuyor.</td></tr>`;
+                            return;
+                        }
+                        list.forEach(v => {
+                            const plate = v.plaka || v.Plaka || v.plate || v.Plate;
+                            const brand = v.marka || v.Marka || v.brand || v.Brand;
+                            const model = v.model || v.Model;
+                            const ownerName = v.musteriAdSoyad || v.MusteriAdSoyad || v.ownerName || v.OwnerName;
+                            const ownerPhone = v.musteriTelefon || v.MusteriTelefon || v.ownerPhone || v.OwnerPhone;
+                            const currentKm = v.mevcutKm !== undefined ? v.mevcutKm : (v.currentKm !== undefined ? v.currentKm : v.CurrentKm);
+                            const nextKm = v.hedefKm !== undefined ? v.hedefKm : (v.nextKm !== undefined ? v.nextKm : (currentKm + 10000));
+
+                            tbody.innerHTML += `
+                                <tr class="hover:bg-slate-800/80 transition-all">
+                                    <td class="p-3 font-mono font-bold text-blue-400">${plate}</td>
+                                    <td class="p-3 font-semibold text-white">${brand} ${model}</td>
+                                    <td class="p-3">${ownerName} (${ownerPhone})</td>
+                                    <td class="p-3 font-mono">${currentKm} KM</td>
+                                    <td class="p-3 font-mono text-amber-400 font-bold">${nextKm} KM</td>
+                                    <td class="p-3 text-right">
+                                        <button onclick="sendMaintenanceReminder('${ownerName}', '${ownerPhone}', '${plate}', '${brand}', '${model}', ${currentKm})"
+                                            class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition-all flex items-center space-x-1 ml-auto">
+                                            <i class="fa-brands fa-whatsapp"></i>
+                                            <span>Bakım Mesajı At</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400">Veriler alınamadı.</td></tr>`;
+                    }
+                } catch (err) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400">Bağlantı hatası.</td></tr>`;
+                }
+            }
+
+            function sendMaintenanceReminder(name, phoneRaw, plate, brand, model, currentKm) {
+                let phone = (phoneRaw || '').replace(/\D/g, '');
+                if (phone.startsWith('0')) phone = '90' + phone.substring(1);
+                if (!phone.startsWith('90')) phone = '90' + phone;
+
+                const trackUrl = `${baseUrl}/index.html?plate=${encodeURIComponent(plate)}`;
+                const senderName = shopData.shopName || shopData.ShopName || "OtoServis Pro";
+                const targetKm = (Math.floor(currentKm / 10000) + 1) * 10000;
+
+                const msg = `Sayın ${name},\n\n${senderName} bünyesindeki ${plate} plakalı ${brand} ${model} aracınızın ${currentKm} KM seviyesine ulaşması nedeniyle yaklaşan ${targetKm} KM periyodik yağ & filtre bakım zamanı gelmiştir.\n\nGüncel kilometre bilgilerinizi bildirmek ve canlı takip için tıklayın:\n${trackUrl}`;
+
+                window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`, '_blank');
+            }
+
+            async function handleCreateVehicle(e) {
+                e.preventDefault();
+                const plakaVal = (getVal('plaka') || getVal('plate')).replace(/\s+/g, '').toUpperCase();
+                const markaVal = getVal('marka') || getVal('brand');
+                const modelVal = getVal('model');
+                const yilVal = parseInt(getVal('yil') || getVal('year')) || 2024;
+                const kmVal = parseInt(getVal('mevcutKm') || getVal('currentKm')) || 0;
+                const adVal = getVal('musteriAdSoyad') || getVal('ownerName');
+                const telVal = getVal('musteriTelefon') || getVal('ownerPhone');
+                const notVal = getVal('ustaNotu') || getVal('mechanicNote');
+
+                const payload = {
+                    plaka: plakaVal,
+                    plate: plakaVal,
+                    marka: markaVal,
+                    brand: markaVal,
+                    model: modelVal,
+                    yil: yilVal,
+                    year: yilVal,
+                    mevcutKm: kmVal,
+                    currentKm: kmVal,
+                    musteriAdSoyad: adVal,
+                    ownerName: adVal,
+                    musteriTelefon: telVal,
+                    ownerPhone: telVal,
+                    ustaNotu: notVal,
+                    mechanicNote: notVal
+                };
+
+                try {
+                    const res = await fetch('/api/Services/create-vehicle', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res.ok) {
+                        alert('Araç ve Servis Kaydı Başarıyla Açıldı!');
+                        document.getElementById('createVehicleForm').reset();
+                        fetchUpcomingMaintenances();
+                    } else {
+                        const errText = await res.text();
+                        alert('Kayıt oluşturulurken hata oluştu: ' + errText);
+                    }
+                } catch (err) {
+                    alert('Bağlantı hatası: ' + err.message);
+                }
+            }
+
+            async function fetchAdminVehicle() {
+                let searchInput = getVal('searchPlaka') || getVal('adminSearchPlate');
+                if (!searchInput) return;
+                
+                const cleanSearch = searchInput.replace(/\s+/g, '').toUpperCase();
+
+                try {
+                    const res = await fetch(`/api/Services/search/${encodeURIComponent(cleanSearch)}`);
+                    if (res.ok) {
+                        currentVehicleData = await res.json();
+                        renderAdminView();
+                    } else {
+                        const err = await res.json().catch(() => ({}));
+                        alert(err.message || 'Araç bulunamadı.');
+                    }
+                } catch (err) {
+                    alert('Arama hatası: ' + err.message);
+                }
+            }
+
+            function renderAdminView() {
+                if (!currentVehicleData) return;
+                const plate = currentVehicleData.plaka || currentVehicleData.Plaka || currentVehicleData.plate || currentVehicleData.Plate;
+                const brand = currentVehicleData.marka || currentVehicleData.Marka || currentVehicleData.brand || currentVehicleData.Brand;
+                const model = currentVehicleData.model || currentVehicleData.Model;
+                const ownerName = currentVehicleData.musteriAdSoyad || currentVehicleData.MusteriAdSoyad || currentVehicleData.ownerName || currentVehicleData.OwnerName;
+                const ownerPhone = currentVehicleData.musteriTelefon || currentVehicleData.MusteriTelefon || currentVehicleData.ownerPhone || currentVehicleData.OwnerPhone;
+
+                document.getElementById('admPlate').innerText = plate;
+                document.getElementById('admCar').innerText = `${brand} ${model}`;
+                document.getElementById('admOwner').innerText = `${ownerName} (${ownerPhone})`;
+                document.getElementById('modalHistorySubtitle').innerText = `${plate} - ${brand} ${model} (${ownerName})`;
+
+                const records = currentVehicleData.serviceRecords || currentVehicleData.ServiceRecords || [];
+
+                if (records.length > 0) {
+                    const lastRec = records[records.length - 1];
+                    currentRecordId = lastRec.id || lastRec.Id;
+                    document.getElementById('admStatusSelect').value = lastRec.status || lastRec.Status || 1;
+                    document.getElementById('admTotalCost').innerText = `${lastRec.totalCost || lastRec.TotalCost || 0} ₺`;
+
+                    // 1. CANLI DÜKKAN İŞLEMLERİ (Sadece aktif servis kalemleri)
+                    const itemListDiv = document.getElementById('admItemList');
+                    itemListDiv.innerHTML = '';
+                    const items = lastRec.serviceItems || lastRec.ServiceItems || [];
+
+                    if (items.length > 0) {
+                        items.forEach(item => {
+                            const itemId = item.id || item.Id;
+                            const desc = item.description || item.Description;
+                            const price = item.price !== undefined ? item.price : item.Price;
+
+                            itemListDiv.innerHTML += `
+                                <div class="flex justify-between items-center bg-slate-800 p-2.5 rounded-lg text-xs">
+                                    <span class="text-slate-200 font-medium">${desc}</span>
+                                    <div class="flex items-center space-x-3">
+                                        <span class="font-bold text-amber-400">${price} ₺</span>
+                                        <button onclick="deleteItem(${itemId})" class="text-red-400 hover:text-red-300">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        itemListDiv.innerHTML = `<div class="text-xs text-slate-500 py-1">Henüz parça/işçilik eklenmedi.</div>`;
+                    }
+
+                    // 2. KORUMALI GEÇMİŞ ARŞİVİ (Ayrı Pop-up Pencerede Gösterim)
+                    const modalHistoryList = document.getElementById('modalHistoryList');
+                    modalHistoryList.innerHTML = '';
+
+                    [...records].reverse().forEach((rec, idx) => {
+                        const entryDate = new Date(rec.entryDate || rec.EntryDate || Date.now()).toLocaleDateString('tr-TR');
+                        const recItems = rec.serviceItems || rec.ServiceItems || [];
+                        const itemsText = recItems.length > 0 
+                            ? recItems.map(i => `${i.description || i.Description} (${i.price !== undefined ? i.price : i.Price}₺)`).join(', ') 
+                            : 'Detaylı parça girilmemiş.';
+
+                        modalHistoryList.innerHTML += `
+                            <div class="bg-slate-900/80 border border-slate-700/80 rounded-xl p-4 text-xs space-y-2">
+                                <div class="flex justify-between items-center border-b border-slate-700/60 pb-2">
+                                    <span class="text-blue-400 font-bold flex items-center">
+                                        <i class="fa-regular fa-calendar-check mr-1.5"></i>Giriş Tarihi: ${entryDate}
+                                    </span>
+                                    <span class="text-emerald-400 font-mono font-bold text-sm">${rec.totalCost || rec.TotalCost || 0} ₺</span>
+                                </div>
+                                <div class="text-slate-300">
+                                    <strong class="text-slate-400">Usta Teşhis Notu:</strong> 
+                                    <span class="italic text-slate-200">${rec.mechanicNote || rec.MechanicNote || rec.ustaNotu || 'Not girilmemiş.'}</span>
+                                </div>
+                                <div class="text-slate-400 bg-slate-800/60 p-2.5 rounded-lg border border-slate-700/40">
+                                    <strong class="text-slate-300 block mb-1">Kayıtlı İşlemler & Parçalar:</strong> 
+                                    <span>${itemsText}</span>
                                 </div>
                             </div>
                         `;
                     });
+                }
+
+                document.getElementById('adminResult').classList.remove('hidden');
+            }
+
+            async function handleAddServiceItem(e) {
+                e.preventDefault();
+                if (!currentRecordId) return;
+
+                const desc = document.getElementById('itemDesc').value.trim();
+                const price = parseFloat(document.getElementById('itemPrice').value);
+
+                const res = await fetch(`/api/Services/add-item/${currentRecordId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ description: desc, price: price })
+                });
+
+                if (res.ok) {
+                    document.getElementById('itemDesc').value = '';
+                    document.getElementById('itemPrice').value = '';
+                    await fetchAdminVehicle();
                 } else {
-                    itemListDiv.innerHTML = `<div class="text-xs text-slate-500 py-1">Henüz parça/işçilik eklenmedi.</div>`;
+                    alert('Parça eklenemedi.');
                 }
+            }
 
-                // GEÇMİŞ SERVİS KAYITLARI (TIMELINE)
-                let historyHtml = `
-                    <div class="border-t border-slate-700/80 pt-4 mt-6">
-                        <h3 class="text-sm font-bold text-white mb-3 flex items-center">
-                            <i class="fa-solid fa-clock-rotate-left text-blue-400 mr-2"></i>Geçmiş Servis & Bakım Kayıtları (${records.length} Giriş)
-                        </h3>
-                        <div class="space-y-3 max-h-60 overflow-y-auto pr-1">
-                `;
+            async function deleteItem(itemId) {
+                if (!confirm('Bu parçayı silmek istediğinizden emin misiniz?')) return;
+                const res = await fetch(`/api/Services/delete-item/${itemId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    await fetchAdminVehicle();
+                }
+            }
 
-                [...records].reverse().forEach(rec => {
-                    const entryDate = new Date(rec.entryDate || rec.EntryDate || Date.now()).toLocaleDateString('tr-TR');
-                    const recItems = rec.serviceItems || rec.ServiceItems || [];
-                    const itemsText = recItems.length > 0 
-                        ? recItems.map(i => `${i.description || i.Description} (${i.price !== undefined ? i.price : i.Price}₺)`).join(', ') 
-                        : 'Detaylı parça girilmemiş.';
+            async function deleteCurrentVehicle() {
+                if (!currentVehicleData) return;
+                const vId = currentVehicleData.id || currentVehicleData.Id;
+                const plate = currentVehicleData.plaka || currentVehicleData.Plaka || currentVehicleData.plate || currentVehicleData.Plate;
 
-                    historyHtml += `
-                        <div class="bg-slate-800/90 border border-slate-700 rounded-xl p-3 text-xs space-y-1">
-                            <div class="flex justify-between items-center font-bold">
-                                <span class="text-blue-400"><i class="fa-regular fa-calendar-check mr-1"></i>${entryDate}</span>
-                                <span class="text-emerald-400 font-mono">${rec.totalCost || rec.TotalCost || 0} ₺</span>
+                if (!confirm(`${plate} plakalı aracı ve tüm servis geçmişini SİLMEK istediğinize emin misiniz?`)) return;
+
+                const res = await fetch(`/api/Services/delete-vehicle/${vId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    alert('Araç kaydı tamamen silindi.');
+                    document.getElementById('adminResult').classList.add('hidden');
+                    fetchUpcomingMaintenances();
+                } else {
+                    alert('Silme işlemi başarısız oldu.');
+                }
+            }
+
+            async function updateStatus() {
+                if (!currentRecordId) return;
+                const newStatus = parseInt(document.getElementById('admStatusSelect').value);
+
+                const res = await fetch(`/api/Services/update-status/${currentRecordId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newStatus)
+                });
+
+                if (res.ok) {
+                    alert('Durum başarıyla güncellendi!');
+                } else {
+                    alert('Güncelleme hatası.');
+                }
+            }
+
+            function sendWhatsApp() {
+                if (!currentVehicleData) return;
+                const statusVal = document.getElementById('admStatusSelect').value;
+                const statusText = statusTextMap[statusVal] || "Güncellendi";
+                
+                const plate = currentVehicleData.plaka || currentVehicleData.Plaka || currentVehicleData.plate || currentVehicleData.Plate;
+                const brand = currentVehicleData.marka || currentVehicleData.Marka || currentVehicleData.brand || currentVehicleData.Brand;
+                const model = currentVehicleData.model || currentVehicleData.Model;
+                const ownerName = currentVehicleData.musteriAdSoyad || currentVehicleData.MusteriAdSoyad || currentVehicleData.ownerName || currentVehicleData.OwnerName;
+                const ownerPhone = currentVehicleData.musteriTelefon || currentVehicleData.MusteriTelefon || currentVehicleData.ownerPhone || currentVehicleData.OwnerPhone;
+
+                let phone = (ownerPhone || '').replace(/\D/g, '');
+                if (phone.startsWith('0')) phone = '90' + phone.substring(1);
+                if (!phone.startsWith('90')) phone = '90' + phone;
+
+                const trackUrl = `${baseUrl}/index.html?plate=${encodeURIComponent(plate)}`;
+                const senderName = shopData.shopName || shopData.ShopName || "OtoServis Pro";
+
+                const msg = `Sayın ${ownerName},\n\n${senderName} bünyesindeki ${plate} plakalı ${brand} ${model} aracınızın servis durumu [${statusText}] olarak güncellenmiştir.\n\nCanlı takip linkiniz:\n${trackUrl}`;
+
+                window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`, '_blank');
+            }
+
+            function downloadPDF() {
+                if (!currentVehicleData) return;
+                const records = currentVehicleData.serviceRecords || currentVehicleData.ServiceRecords || [];
+                const lastRec = records.length > 0 ? records[records.length - 1] : {};
+
+                const activeShopName = shopData.shopName || shopData.ShopName || "OTOSERVİS PRO";
+                const activeAddress = shopData.address || shopData.Address || "Teknik Servis & Bakım İş Emri Formu";
+                const activeIban = shopData.iban || shopData.Iban || "";
+
+                const plate = currentVehicleData.plaka || currentVehicleData.Plaka || currentVehicleData.plate || currentVehicleData.Plate;
+                const brand = currentVehicleData.marka || currentVehicleData.Marka || currentVehicleData.brand || currentVehicleData.Brand;
+                const model = currentVehicleData.model || currentVehicleData.Model;
+                const year = currentVehicleData.yil || currentVehicleData.Yil || currentVehicleData.year || currentVehicleData.Year;
+                const ownerName = currentVehicleData.musteriAdSoyad || currentVehicleData.MusteriAdSoyad || currentVehicleData.ownerName || currentVehicleData.OwnerName;
+                const ownerPhone = currentVehicleData.musteriTelefon || currentVehicleData.MusteriTelefon || currentVehicleData.ownerPhone || currentVehicleData.OwnerPhone;
+
+                document.getElementById('pdfShopTitle').innerText = activeShopName.toUpperCase();
+                document.getElementById('pdfShopAddress').innerText = activeAddress;
+                document.getElementById('pdfShopIban').innerText = activeIban ? `IBAN: ${activeIban}` : '';
+                document.getElementById('pdfFooterBrand').innerText = `Bu belge ${activeShopName} dijital altyapısı ile oluşturulmuştur.`;
+
+                document.getElementById('pdfDate').innerText = new Date().toLocaleDateString('tr-TR');
+                document.getElementById('pdfPlate').innerText = plate;
+                document.getElementById('pdfCar').innerText = `${brand} ${model} (${year})`;
+                document.getElementById('pdfOwner').innerText = ownerName;
+                document.getElementById('pdfPhone').innerText = ownerPhone;
+                document.getElementById('pdfNote').innerText = lastRec.mechanicNote || lastRec.MechanicNote || lastRec.ustaNotu || "İşlem detayı belirtilmedi.";
+                document.getElementById('pdfTotalCost').innerText = `Toplam: ${lastRec.totalCost || lastRec.TotalCost || 0} ₺`;
+
+                const pdfItemsDiv = document.getElementById('pdfItemsList');
+                pdfItemsDiv.innerHTML = '';
+                const items = lastRec.serviceItems || lastRec.ServiceItems || [];
+
+                if (items.length > 0) {
+                    items.forEach(item => {
+                        const desc = item.description || item.Description;
+                        const price = item.price !== undefined ? item.price : item.Price;
+                        pdfItemsDiv.innerHTML += `
+                            <div class="py-2 flex justify-between text-xs">
+                                <span class="font-semibold text-slate-800">${desc}</span>
+                                <span class="font-bold text-slate-900">${price} ₺</span>
                             </div>
-                            <div class="text-slate-300"><strong>Usta Notu:</strong> ${rec.mechanicNote || rec.MechanicNote || rec.ustaNotu || 'Not yok.'}</div>
-                            <div class="text-slate-400 text-[11px]"><strong>Yapılanlar:</strong> ${itemsText}</div>
-                        </div>
-                    `;
-                });
-
-                historyHtml += `</div></div>`;
-
-                let historyContainer = document.getElementById('admHistoryContainer');
-                if (!historyContainer) {
-                    historyContainer = document.createElement('div');
-                    historyContainer.id = 'admHistoryContainer';
-                    document.getElementById('adminResult').appendChild(historyContainer);
+                        `;
+                    });
+                } else {
+                    pdfItemsDiv.innerHTML = `<div class="py-2 text-xs text-slate-500">Parça kaydı girilmedi.</div>`;
                 }
-                historyContainer.innerHTML = historyHtml;
+
+                const element = document.getElementById('pdfTemplate');
+                html2pdf().from(element).save(`Is_Emri_${plate}.pdf`);
             }
-
-            document.getElementById('adminResult').classList.remove('hidden');
-        }
-
-        async function handleAddServiceItem(e) {
-            e.preventDefault();
-            if (!currentRecordId) return;
-
-            const desc = document.getElementById('itemDesc').value.trim();
-            const price = parseFloat(document.getElementById('itemPrice').value);
-
-            const res = await fetch(`/api/Services/add-item/${currentRecordId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ description: desc, price: price })
-            });
-
-            if (res.ok) {
-                document.getElementById('itemDesc').value = '';
-                document.getElementById('itemPrice').value = '';
-                await fetchAdminVehicle();
-            } else {
-                alert('Parça eklenemedi.');
-            }
-        }
-
-        async function deleteItem(itemId) {
-            if (!confirm('Bu parçayı silmek istediğinizden emin misiniz?')) return;
-            const res = await fetch(`/api/Services/delete-item/${itemId}`, { method: 'DELETE' });
-            if (res.ok) {
-                await fetchAdminVehicle();
-            }
-        }
-
-        async function deleteCurrentVehicle() {
-            if (!currentVehicleData) return;
-            const vId = currentVehicleData.id || currentVehicleData.Id;
-            const plate = currentVehicleData.plate || currentVehicleData.Plate || currentVehicleData.plaka || currentVehicleData.Plaka;
-
-            if (!confirm(`${plate} plakalı aracı ve tüm servis geçmişini SİLMEK istediğinize emin misiniz?`)) return;
-
-            const res = await fetch(`/api/Services/delete-vehicle/${vId}`, { method: 'DELETE' });
-            if (res.ok) {
-                alert('Araç kaydı tamamen silindi.');
-                document.getElementById('adminResult').classList.add('hidden');
-                document.getElementById('adminSearchPlate').value = '';
-                fetchUpcomingMaintenances();
-            } else {
-                alert('Silme işlemi başarısız oldu.');
-            }
-        }
-
-        async function updateStatus() {
-            if (!currentRecordId) return;
-            const newStatus = parseInt(document.getElementById('admStatusSelect').value);
-
-            const res = await fetch(`/api/Services/update-status/${currentRecordId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newStatus)
-            });
-
-            if (res.ok) {
-                alert('Durum başarıyla güncellendi!');
-            } else {
-                alert('Güncelleme hatası.');
-            }
-        }
-
-        function sendWhatsApp() {
-            if (!currentVehicleData) return;
-            const statusVal = document.getElementById('admStatusSelect').value;
-            const statusText = statusTextMap[statusVal] || "Güncellendi";
-            
-            const plate = currentVehicleData.plate || currentVehicleData.Plate || currentVehicleData.plaka || currentVehicleData.Plaka;
-            const brand = currentVehicleData.brand || currentVehicleData.Brand || currentVehicleData.marka || currentVehicleData.Marka;
-            const model = currentVehicleData.model || currentVehicleData.Model;
-            const ownerName = currentVehicleData.ownerName || currentVehicleData.OwnerName || currentVehicleData.musteriAdSoyad || currentVehicleData.MusteriAdSoyad;
-            const ownerPhone = currentVehicleData.ownerPhone || currentVehicleData.OwnerPhone || currentVehicleData.musteriTelefon || currentVehicleData.MusteriTelefon;
-
-            let phone = ownerPhone.replace(/\D/g, '');
-            if (phone.startsWith('0')) phone = '90' + phone.substring(1);
-            if (!phone.startsWith('90')) phone = '90' + phone;
-
-            const trackUrl = `${baseUrl}/index.html?plate=${encodeURIComponent(plate)}`;
-            const senderName = shopData.shopName || shopData.ShopName || "OtoServis Pro";
-
-            const msg = `Sayın ${ownerName},\n\n${senderName} bünyesindeki ${plate} plakalı ${brand} ${model} aracınızın servis durumu [${statusText}] olarak güncellenmiştir.\n\nCanlı takip linkiniz:\n${trackUrl}`;
-
-            window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`, '_blank');
-        }
-
-        function downloadPDF() {
-            if (!currentVehicleData) return;
-            const records = currentVehicleData.serviceRecords || currentVehicleData.ServiceRecords || [];
-            const lastRec = records.length > 0 ? records[records.length - 1] : {};
-
-            const activeShopName = shopData.shopName || shopData.ShopName || "OTOSERVİS PRO";
-            const activeAddress = shopData.address || shopData.Address || "Teknik Servis & Bakım İş Emri Formu";
-            const activeIban = shopData.iban || shopData.Iban || "";
-
-            const plate = currentVehicleData.plate || currentVehicleData.Plate || currentVehicleData.plaka || currentVehicleData.Plaka;
-            const brand = currentVehicleData.brand || currentVehicleData.Brand || currentVehicleData.marka || currentVehicleData.Marka;
-            const model = currentVehicleData.model || currentVehicleData.Model;
-            const year = currentVehicleData.year || currentVehicleData.Year || currentVehicleData.yil || currentVehicleData.Yil;
-            const ownerName = currentVehicleData.ownerName || currentVehicleData.OwnerName || currentVehicleData.musteriAdSoyad || currentVehicleData.MusteriAdSoyad;
-            const ownerPhone = currentVehicleData.ownerPhone || currentVehicleData.OwnerPhone || currentVehicleData.musteriTelefon || currentVehicleData.MusteriTelefon;
-
-            document.getElementById('pdfShopTitle').innerText = activeShopName.toUpperCase();
-            document.getElementById('pdfShopAddress').innerText = activeAddress;
-            document.getElementById('pdfShopIban').innerText = activeIban ? `IBAN: ${activeIban}` : '';
-            document.getElementById('pdfFooterBrand').innerText = `Bu belge ${activeShopName} dijital altyapısı ile oluşturulmuştur.`;
-
-            document.getElementById('pdfDate').innerText = new Date().toLocaleDateString('tr-TR');
-            document.getElementById('pdfPlate').innerText = plate;
-            document.getElementById('pdfCar').innerText = `${brand} ${model} (${year})`;
-            document.getElementById('pdfOwner').innerText = ownerName;
-            document.getElementById('pdfPhone').innerText = ownerPhone;
-            document.getElementById('pdfNote').innerText = lastRec.mechanicNote || lastRec.MechanicNote || lastRec.ustaNotu || "İşlem detayı belirtilmedi.";
-            document.getElementById('pdfTotalCost').innerText = `Toplam: ${lastRec.totalCost || lastRec.TotalCost || 0} ₺`;
-
-            const pdfItemsDiv = document.getElementById('pdfItemsList');
-            pdfItemsDiv.innerHTML = '';
-            const items = lastRec.serviceItems || lastRec.ServiceItems || [];
-
-            if (items.length > 0) {
-                items.forEach(item => {
-                    const desc = item.description || item.Description;
-                    const price = item.price !== undefined ? item.price : item.Price;
-                    pdfItemsDiv.innerHTML += `
-                        <div class="py-2 flex justify-between text-xs">
-                            <span class="font-semibold text-slate-800">${desc}</span>
-                            <span class="font-bold text-slate-900">${price} ₺</span>
-                        </div>
-                    `;
-                });
-            } else {
-                pdfItemsDiv.innerHTML = `<div class="py-2 text-xs text-slate-500">Parça kaydı girilmedi.</div>`;
-            }
-
-            const element = document.getElementById('pdfTemplate');
-            html2pdf().from(element).save(`Is_Emri_${plate}.pdf`);
-        }
-    </script>
+        </script>
 </body>
 </html>

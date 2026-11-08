@@ -143,6 +143,7 @@ namespace mepa_servis.Controllers
             }
         }
 
+        // USTANIN KİLOMETRE GÜNCELLEMESİ İÇİN
         [HttpPatch("update-km/{vehicleId}")]
         public async Task<IActionResult> UpdateVehicleKm(int vehicleId, [FromBody] int newKm)
         {
@@ -214,6 +215,48 @@ namespace mepa_servis.Controllers
             record.Status = (ServiceStatus)status;
             await _context.SaveChangesAsync();
             return Ok(record);
+        }
+
+        // --- YENİ: STOK YÖNETİMİ API UÇLARI --- //
+
+        [HttpGet("stock")]
+        public async Task<IActionResult> GetStockItems()
+        {
+            var items = await _context.StockItems.ToListAsync();
+            return Ok(items);
+        }
+
+        [HttpPost("stock")]
+        public async Task<IActionResult> AddOrUpdateStock([FromBody] StockItem input)
+        {
+            if (string.IsNullOrWhiteSpace(input.Name)) return BadRequest("Parça adı zorunludur.");
+
+            var existingItem = await _context.StockItems.FirstOrDefaultAsync(s => s.Sku == input.Sku && !string.IsNullOrEmpty(input.Sku));
+
+            if (existingItem != null)
+            {
+                existingItem.Quantity += input.Quantity; // Var olan parçaysa adedi artır
+                existingItem.PurchasePrice = input.PurchasePrice;
+                existingItem.SalePrice = input.SalePrice;
+            }
+            else
+            {
+                _context.StockItems.Add(input);
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(input);
+        }
+
+        [HttpDelete("stock/{id}")]
+        public async Task<IActionResult> DeleteStockItem(int id)
+        {
+            var item = await _context.StockItems.FindAsync(id);
+            if (item == null) return NotFound();
+
+            _context.StockItems.Remove(item);
+            await _context.SaveChangesAsync();
+            return Ok();
         }
     }
 }

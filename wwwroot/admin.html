@@ -83,14 +83,12 @@
                                 <span>Genel Bakış</span>
                             </div>
                         </button>
-
                         <button onclick="switchTab('vehicles')" id="nav-vehicles" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
                             <div class="flex items-center space-x-2.5">
                                 <i class="fa-solid fa-car text-sm w-4 text-center"></i>
                                 <span>Araç Yönetimi</span>
                             </div>
                         </button>
-
                         <button onclick="switchTab('customers')" id="nav-customers" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
                             <div class="flex items-center space-x-2.5">
                                 <i class="fa-solid fa-users text-sm w-4 text-center"></i>
@@ -113,21 +111,18 @@
                                 <span>Kabul & Çizik Haritası</span>
                             </div>
                         </button>
-
                         <button onclick="switchTab('stock')" id="nav-stock" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all group">
                             <div class="flex items-center space-x-2.5">
                                 <i class="fa-solid fa-boxes-stacked text-sm w-4 text-center group-hover:text-amber-400 transition-colors"></i>
                                 <span>Yedek Parça Stok</span>
                             </div>
                         </button>
-
                         <button onclick="switchTab('finance')" id="nav-finance" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all group">
                             <div class="flex items-center space-x-2.5">
                                 <i class="fa-solid fa-wallet text-sm w-4 text-center group-hover:text-amber-400 transition-colors"></i>
                                 <span>Gelir / Gider & Ciro</span>
                             </div>
                         </button>
-
                         <button onclick="switchTab('appointments')" id="nav-appointments" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all group">
                             <div class="flex items-center space-x-2.5">
                                 <i class="fa-solid fa-calendar-check text-sm w-4 text-center group-hover:text-amber-400 transition-colors"></i>
@@ -441,23 +436,149 @@
         <section id="tab-inspection" class="tab-content hidden space-y-6">
             <div>
                 <h2 class="text-xl font-bold text-white">Araç Kabul & Çizik Haritası</h2>
-                <p class="text-xs text-slate-400">Araç servise girerken kaporta hasarlarını işaretleyin ve fotoğraf yükleyin.</p>
+                <p class="text-xs text-slate-400">Araç servise girerken kaporta hasarlarını işaretleyin ve müşteri şikayetlerini not alın.</p>
             </div>
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center h-64 border-dashed">
-                <i class="fa-solid fa-car-side text-4xl text-slate-700 mb-3"></i>
-                <p class="text-slate-400 text-sm font-semibold mt-2">Çizik Haritası Arayüzü Kodlanacak...</p>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Hasar Kayıt Formu -->
+                <div class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-6 h-fit">
+                    <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-clipboard-check text-blue-500 mr-2"></i>Hasar Kaydı Ekle</h3>
+                    <form onsubmit="dummyAction(event, 'Hasar Kaydı')" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Plaka</label>
+                            <input type="text" placeholder="Örn: 34KEB128" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 uppercase">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Hasarlı Bölge</label>
+                            <select class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                                <option>Ön Tampon</option>
+                                <option>Sağ Çamurluk</option>
+                                <option>Sol Kapı</option>
+                                <option>Arka Tampon</option>
+                                <option>Tavan</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Hasar Türü</label>
+                            <select class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                                <option>Çizik</option>
+                                <option>Göçük</option>
+                                <option>Boya Atması</option>
+                                <option>Kırık / Çatlak</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Açıklama (Opsiyonel)</label>
+                            <textarea rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500" placeholder="Derin çizik mevcut..."></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition-all text-sm">Haritaya Ekle</button>
+                    </form>
+                </div>
+
+                <!-- Harita ve Liste -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 relative flex flex-col items-center justify-center min-h-[300px] border-dashed">
+                        <div class="absolute inset-0 flex items-center justify-center opacity-20">
+                            <i class="fa-solid fa-car-side text-[150px] text-slate-500"></i>
+                        </div>
+                        <div class="z-10 text-center">
+                            <p class="text-amber-400 font-bold mb-2"><i class="fa-solid fa-code text-xl mr-2"></i>Backend Entegrasyonu Bekleniyor</p>
+                            <p class="text-xs text-slate-400 max-w-xs mx-auto">İlerleyen aşamada burada aracın 2D krokisi yer alacak ve tıklayarak nokta işaretlemesi yapılabilecektir.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- TAB 6: STOK YÖNETİMİ -->
+        <!-- TAB 6: STOK YÖNETİMİ (AKTİF) -->
         <section id="tab-stock" class="tab-content hidden space-y-6">
             <div>
                 <h2 class="text-xl font-bold text-white">Yedek Parça & Stok Yönetimi</h2>
-                <p class="text-xs text-slate-400">Depodaki yağ, filtre ve yedek parçaların adetlerini ve maliyetlerini takip edin.</p>
+                <p class="text-xs text-slate-400">Depodaki parça adetlerini, alış-satış maliyetlerini ve stok alarmını takip edin.</p>
             </div>
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center h-64 border-dashed">
-                <i class="fa-solid fa-boxes-stacked text-4xl text-slate-700 mb-3"></i>
-                <p class="text-slate-400 text-sm font-semibold mt-2">Stok Tabloları Kodlanacak...</p>
+
+            <!-- Stok İstatistikleri -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center space-x-4">
+                    <div class="w-10 h-10 bg-blue-500/20 text-blue-400 rounded-lg flex items-center justify-center text-lg"><i class="fa-solid fa-box-open"></i></div>
+                    <div>
+                        <div class="text-xs text-slate-400 font-semibold uppercase">Toplam Parça Çeşidi</div>
+                        <div class="text-xl font-black text-white">0</div>
+                    </div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center space-x-4">
+                    <div class="w-10 h-10 bg-amber-500/20 text-amber-400 rounded-lg flex items-center justify-center text-lg"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div>
+                        <div class="text-xs text-slate-400 font-semibold uppercase">Kritik Stok (Azalanlar)</div>
+                        <div class="text-xl font-black text-white">0</div>
+                    </div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center space-x-4">
+                    <div class="w-10 h-10 bg-emerald-500/20 text-emerald-400 rounded-lg flex items-center justify-center text-lg"><i class="fa-solid fa-coins"></i></div>
+                    <div>
+                        <div class="text-xs text-slate-400 font-semibold uppercase">Depo Toplam Maliyet</div>
+                        <div class="text-xl font-black text-white">0 ₺</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Stok Ekleme Formu -->
+                <div class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-6 h-fit">
+                    <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-plus-circle text-emerald-500 mr-2"></i>Yeni Parça Ekle</h3>
+                    <form onsubmit="handleAddStock(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Parça Adı</label>
+                            <input type="text" placeholder="Örn: 5W-30 Motor Yağı (4L)" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Stok Kodu (SKU)</label>
+                            <input type="text" placeholder="Örn: YAG-5W30-01" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 uppercase">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1">Alış Fiyatı (₺)</label>
+                                <input type="number" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1">Satış Fiyatı (₺)</label>
+                                <input type="number" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Mevcut Adet</label>
+                            <input type="number" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition-all text-sm">Stoka Ekle</button>
+                    </form>
+                </div>
+
+                <!-- Stok Tablosu -->
+                <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-base font-bold text-white"><i class="fa-solid fa-table-list text-blue-500 mr-2"></i>Güncel Stok Listesi</h3>
+                        <div class="relative">
+                            <input type="text" placeholder="Parça Ara..." class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 pl-8">
+                            <i class="fa-solid fa-search absolute left-2.5 top-2 text-slate-500 text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-950 text-slate-400 uppercase font-semibold">
+                                <tr>
+                                    <th class="p-3">Parça Adı</th>
+                                    <th class="p-3">Kodu</th>
+                                    <th class="p-3">Alış / Satış</th>
+                                    <th class="p-3 text-center">Stok</th>
+                                    <th class="p-3 text-right">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800">
+                                <tr><td colspan="5" class="p-4 text-center text-slate-500">Yükleniyor...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -465,11 +586,71 @@
         <section id="tab-finance" class="tab-content hidden space-y-6">
             <div>
                 <h2 class="text-xl font-bold text-white">Gelir / Gider & Ciro Paneli</h2>
-                <p class="text-xs text-slate-400">Dükkanın günlük cirosu, giderleri ve veresiye hesaplarını yönetin.</p>
+                <p class="text-xs text-slate-400">Dükkanın genel muhasebesi, günlük ciro ve nakit akışını izleyin.</p>
             </div>
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center h-64 border-dashed">
-                <i class="fa-solid fa-chart-line text-4xl text-slate-700 mb-3"></i>
-                <p class="text-slate-400 text-sm font-semibold mt-2">Finans Grafikleri Kodlanacak...</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-slate-900 border border-emerald-500/30 p-5 rounded-2xl">
+                    <div class="text-xs text-emerald-400 font-bold uppercase mb-1">Toplam Kasa (Net)</div>
+                    <div class="text-2xl font-black text-white">0.00 ₺</div>
+                </div>
+                <div class="bg-slate-900 border border-blue-500/30 p-5 rounded-2xl">
+                    <div class="text-xs text-blue-400 font-bold uppercase mb-1">Aylık Toplam Gelir</div>
+                    <div class="text-2xl font-black text-white">0.00 ₺</div>
+                </div>
+                <div class="bg-slate-900 border border-red-500/30 p-5 rounded-2xl">
+                    <div class="text-xs text-red-400 font-bold uppercase mb-1">Aylık Toplam Gider</div>
+                    <div class="text-2xl font-black text-white">0.00 ₺</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- İşlem Ekleme Formu -->
+                <div class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-6 h-fit">
+                    <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-money-bill-transfer text-amber-500 mr-2"></i>Manuel Finans İşlemi</h3>
+                    <form onsubmit="dummyAction(event, 'Finans İşlemi')" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">İşlem Türü</label>
+                            <div class="flex gap-2">
+                                <label class="flex-1 flex items-center justify-center gap-2 bg-slate-950 border border-slate-800 rounded-xl py-2 cursor-pointer text-sm">
+                                    <input type="radio" name="financeType" value="income" class="accent-emerald-500" checked> <span class="text-emerald-400 font-bold">Gelir</span>
+                                </label>
+                                <label class="flex-1 flex items-center justify-center gap-2 bg-slate-950 border border-slate-800 rounded-xl py-2 cursor-pointer text-sm">
+                                    <input type="radio" name="financeType" value="expense" class="accent-red-500"> <span class="text-red-400 font-bold">Gider</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Kategori / Açıklama</label>
+                            <input type="text" placeholder="Örn: Elektrik Faturası, Dükkan Kirası" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Tutar (₺)</label>
+                            <input type="number" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono font-bold focus:outline-none focus:border-blue-500">
+                        </div>
+                        <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl transition-all text-sm">Kaydet</button>
+                    </form>
+                </div>
+
+                <!-- Finans Tablosu -->
+                <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                    <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-list text-blue-500 mr-2"></i>Son İşlemler Dökümü</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-950 text-slate-400 uppercase font-semibold">
+                                <tr>
+                                    <th class="p-3">Tarih</th>
+                                    <th class="p-3">Açıklama</th>
+                                    <th class="p-3">Tür</th>
+                                    <th class="p-3 text-right">Tutar</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800">
+                                <tr><td colspan="4" class="p-4 text-center text-slate-500">Kayıt bulunamadı (Backend bekleniyor).</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -477,11 +658,60 @@
         <section id="tab-appointments" class="tab-content hidden space-y-6">
             <div>
                 <h2 class="text-xl font-bold text-white">Randevu & Lift Takvimi</h2>
-                <p class="text-xs text-slate-400">Müşteri randevularını planlayın ve dükkan yoğunluğunu kontrol edin.</p>
+                <p class="text-xs text-slate-400">Müşterilerin dükkana geliş zamanlarını planlayın ve atölye yoğunluğunu ayarlayın.</p>
             </div>
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center h-64 border-dashed">
-                <i class="fa-solid fa-calendar-days text-4xl text-slate-700 mb-3"></i>
-                <p class="text-slate-400 text-sm font-semibold mt-2">Takvim Arayüzü Kodlanacak...</p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Randevu Ekleme -->
+                <div class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-6 h-fit">
+                    <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-calendar-plus text-blue-500 mr-2"></i>Yeni Randevu Oluştur</h3>
+                    <form onsubmit="dummyAction(event, 'Randevu Kaydı')" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Müşteri Ad Soyad</label>
+                            <input type="text" placeholder="Müşteri Adı" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Araç Plakası</label>
+                            <input type="text" placeholder="Örn: 34KEB128" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 uppercase">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1">Tarih</label>
+                                <input type="date" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1">Saat</label>
+                                <input type="time" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 text-sm">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Kısa Not / Şikayet</label>
+                            <input type="text" placeholder="Periyodik bakım, fren sesi vs." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition-all text-sm">Takvime Ekle</button>
+                    </form>
+                </div>
+
+                <!-- Randevu Listesi -->
+                <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                    <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-calendar-check text-emerald-500 mr-2"></i>Yaklaşan Randevular</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-950 text-slate-400 uppercase font-semibold">
+                                <tr>
+                                    <th class="p-3">Tarih & Saat</th>
+                                    <th class="p-3">Müşteri</th>
+                                    <th class="p-3">Plaka</th>
+                                    <th class="p-3">Not</th>
+                                    <th class="p-3 text-right">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800">
+                                <tr><td colspan="5" class="p-4 text-center text-slate-500">Henüz randevu eklenmedi (Backend bekleniyor).</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -547,8 +777,15 @@
                 loadShopSettings();
                 fetchUpcomingMaintenances();
                 loadCustomers();
+                fetchStockItems(); // Sayfa açılışında stokları getir
             }
         };
+
+        // KİLİTLİ MODÜLLER İÇİN GEÇİCİ UYARI FONKSİYONU
+        function dummyAction(e, actionName) {
+            e.preventDefault();
+            alert(`${actionName} işlemi arayüzde çalışıyor.\nVeritabanı (C# Entity) bağlantıları bir sonraki aşamada yapılacaktır.`);
+        }
 
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -565,6 +802,7 @@
             }
 
             if (tabName === 'customers') loadCustomers();
+            if (tabName === 'stock') fetchStockItems();
         }
 
         function handleLogin(e) {
@@ -576,6 +814,7 @@
                 loadShopSettings();
                 fetchUpcomingMaintenances();
                 loadCustomers();
+                fetchStockItems();
             } else {
                 document.getElementById("loginError").classList.remove("hidden");
             }
@@ -1083,6 +1322,110 @@
             const element = document.getElementById('pdfTemplate');
             html2pdf().from(element).save(`Is_Emri_${plate}.pdf`);
         }
+
+        // --- YENİ STOK YÖNETİMİ JAVASCRIPT KODLARI --- //
+
+        async function fetchStockItems() {
+            try {
+                const res = await fetch('/api/Services/stock');
+                if (res.ok) {
+                    const items = await res.json();
+                    renderStockView(items);
+                }
+            } catch (err) {
+                console.error("Stok çekme hatası:", err);
+            }
+        }
+
+        function renderStockView(items) {
+            const tbody = document.querySelector('#tab-stock tbody');
+            tbody.innerHTML = '';
+            
+            let totalCost = 0;
+            let criticalCount = 0;
+
+            if (items.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">Kayıtlı parça bulunamadı.</td></tr>`;
+            } else {
+                items.forEach(item => {
+                    const cost = item.purchasePrice * item.quantity;
+                    totalCost += cost;
+                    if (item.quantity <= 5) criticalCount++; // Kritik stok sınırı: 5
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-800/80 transition-all border-b border-slate-800/50">
+                            <td class="p-3 font-semibold text-white">${item.name}</td>
+                            <td class="p-3 font-mono text-xs text-slate-400">${item.sku || '-'}</td>
+                            <td class="p-3 text-xs">
+                                <span class="text-red-400">${item.purchasePrice}₺</span> / 
+                                <span class="text-emerald-400 font-bold">${item.salePrice}₺</span>
+                            </td>
+                            <td class="p-3 text-center">
+                                <span class="${item.quantity <= 5 ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'} border px-2 py-1 rounded font-bold">
+                                    ${item.quantity} Adet
+                                </span>
+                            </td>
+                            <td class="p-3 text-right">
+                                <button onclick="deleteStockItem(${item.id})" class="text-red-400 hover:text-red-300 transition-all">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // İstatistik Kartlarını Güncelle
+            document.querySelectorAll('#tab-stock .text-xl.font-black.text-white')[0].innerText = items.length; // Çeşit
+            document.querySelectorAll('#tab-stock .text-xl.font-black.text-white')[1].innerText = criticalCount; // Kritik
+            document.querySelectorAll('#tab-stock .text-xl.font-black.text-white')[2].innerText = `${totalCost.toLocaleString('tr-TR')} ₺`; // Toplam Maliyet
+        }
+
+        async function handleAddStock(e) {
+            e.preventDefault();
+            const inputs = e.target.querySelectorAll('input');
+            const payload = {
+                name: inputs[0].value,
+                sku: inputs[1].value.toUpperCase(),
+                purchasePrice: parseFloat(inputs[2].value),
+                salePrice: parseFloat(inputs[3].value),
+                quantity: parseInt(inputs[4].value)
+            };
+
+            try {
+                const res = await fetch('/api/Services/stock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    e.target.reset();
+                    fetchStockItems();
+                } else {
+                    alert("Parça eklenirken hata oluştu.");
+                }
+            } catch (err) {
+                alert("Bağlantı hatası.");
+            }
+        }
+
+        async function deleteStockItem(id) {
+            if (!confirm("Bu parçayı stoktan silmek istediğinize emin misiniz?")) return;
+            const res = await fetch(`/api/Services/stock/${id}`, { method: 'DELETE' });
+            if (res.ok) fetchStockItems();
+        }
+
+        // Arama Filtresi İçin
+        document.querySelector('#tab-stock input[placeholder="Parça Ara..."]').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#tab-stock tbody tr');
+            rows.forEach(row => {
+                if(row.innerText.toLowerCase().includes(term)) row.style.display = '';
+                else row.style.display = 'none';
+            });
+        });
+
     </script>
 </body>
 </html>

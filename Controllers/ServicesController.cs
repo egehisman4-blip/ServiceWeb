@@ -377,5 +377,27 @@ namespace mepa_servis.Controllers
 
             return Ok(new { message = "Giriş başarılı", shopId = shop.Id, shopName = shop.ShopName, shopCode = shop.ShopCode });
         }
+        // --- YENİ DÜKKAN KAYIT (SÜPER ADMIN) --- //
+        [HttpPost("register-shop")]
+        public async Task<IActionResult> RegisterShop([FromBody] Shop newShop)
+        {
+            if (string.IsNullOrWhiteSpace(newShop.ShopCode) || string.IsNullOrWhiteSpace(newShop.PasswordHash))
+            {
+                return BadRequest("Dükkan kodu ve şifre zorunludur.");
+            }
+
+            var cleanCode = newShop.ShopCode.Trim().ToLower();
+            var existing = await _context.Shops.FirstOrDefaultAsync(s => s.ShopCode.ToLower() == cleanCode);
+            if (existing != null)
+            {
+                return BadRequest(new { message = "Bu dükkan kodu zaten kullanımda!" });
+            }
+
+            newShop.ShopCode = cleanCode;
+            _context.Shops.Add(newShop);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Dükkan başarıyla oluşturuldu!", shopId = newShop.Id });
+        }
     }
 }

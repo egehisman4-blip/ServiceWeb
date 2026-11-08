@@ -1,0 +1,11 @@
+POST https://serviceweb-twt6.onrender.com/api/Services/register-shop
+Content-Type: application/json
+
+{
+  "shopCode": "yildizoto",
+  "shopName": "Yıldız Oto Servis",
+  "passwordHash": "sifre123",
+  "phone": "0555 444 33 22",
+  "address": "Ankara Sanayi Sitesi",
+  "iban": "TR33 0000 0000 0000 0000 00"
+}

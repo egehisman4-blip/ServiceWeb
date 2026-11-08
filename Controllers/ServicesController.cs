@@ -356,5 +356,26 @@ namespace mepa_servis.Controllers
             await _context.SaveChangesAsync();
             return Ok();
         }
+        // --- DÜKKAN GİRİŞ (AUTH) API UÇLARI --- //
+
+        public class LoginDto
+        {
+            public string ShopCode { get; set; } = string.Empty;
+            public string Password { get; set; } = string.Empty;
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto model)
+        {
+            var cleanCode = model.ShopCode.Trim().ToLower();
+            var shop = await _context.Shops.FirstOrDefaultAsync(s => s.ShopCode.ToLower() == cleanCode);
+
+            if (shop == null || shop.PasswordHash != model.Password)
+            {
+                return Unauthorized(new { message = "Hatalı dükkan kodu veya şifre!" });
+            }
+
+            return Ok(new { message = "Giriş başarılı", shopId = shop.Id, shopName = shop.ShopName, shopCode = shop.ShopCode });
+        }
     }
 }

@@ -6,6 +6,7 @@ namespace mepa_servis.Entities
         public string CustomerName { get; set; } = string.Empty; // Müşteri Ad Soyad
         public string Plate { get; set; } = string.Empty;        // Araç Plakası
         public DateTime AppointmentDate { get; set; }            // Randevu Tarih ve Saati
-        public string Note { get; set; } = string.Empty;         // Şikayet / İşlem Notu
+        public string Note { get; set; } = string.Empty;
+        public int ShopId { get; set; }         // Şikayet / İşlem Notu
     }
 }

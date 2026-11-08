@@ -15,18 +15,23 @@
         <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl">
             <div class="text-center mb-6">
                 <div class="bg-blue-600 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 text-white">
-                    <i class="fa-solid fa-lock text-xl"></i>
+                    <i class="fa-solid fa-store text-xl"></i>
                 </div>
-                <h2 class="text-xl font-bold text-white">Usta Girişi</h2>
-                <p class="text-xs text-slate-400 mt-1">Yönetim paneline erişmek için şifrenizi girin.</p>
+                <h2 class="text-xl font-bold text-white">Dükkan Girişi</h2>
+                <p class="text-xs text-slate-400 mt-1">Yönetim paneline erişmek için dükkan kodu ve şifrenizi girin.</p>
             </div>
             <form onsubmit="handleLogin(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Yönetici Şifresi</label>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Dükkan Kodu</label>
+                    <input type="text" id="loginShopCode" placeholder="Örn: mepa" required
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:outline-none text-center text-lg uppercase font-bold">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Dükkan Şifresi</label>
                     <input type="password" id="adminPassword" placeholder="••••••••" required
                         class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:outline-none tracking-widest text-center text-lg">
                 </div>
-                <div id="loginError" class="hidden text-red-400 text-xs text-center font-medium">Hatalı şifre! Lütfen tekrar deneyin.</div>
+                <div id="loginError" class="hidden text-red-400 text-xs text-center font-medium">Hatalı dükkan kodu veya şifre!</div>
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-600/20">
                     Giriş Yap
                 </button>
@@ -67,13 +72,12 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-sm text-white leading-tight" id="sidebarShopTitle">OTO SERVİS PRO</h1>
-                    <span class="inline-block bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-bold px-2 py-0.5 rounded mt-1">Full Sürüm</span>
+                    <span class="inline-block bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-bold px-2 py-0.5 rounded mt-1">SaaS Sürüm</span>
                 </div>
             </div>
 
             <!-- Menü Linkleri -->
             <nav class="space-y-4">
-                <!-- Temel Modüller -->
                 <div>
                     <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2 px-2">Genel Servis</div>
                     <div class="space-y-1">
@@ -98,7 +102,6 @@
                     </div>
                 </div>
 
-                <!-- Gelişmiş Özellikler -->
                 <div>
                     <div class="text-[10px] font-bold uppercase tracking-wider text-amber-500/80 mb-2 px-2 flex items-center justify-between">
                         <span>Gelişmiş Özellikler</span>
@@ -132,7 +135,6 @@
                     </div>
                 </div>
 
-                <!-- Ayarlar -->
                 <div>
                     <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2 px-2">Sistem</div>
                     <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
@@ -793,12 +795,12 @@
     </div>
 
     <script>
-        const ADMIN_PASS = "1234";
         const baseUrl = window.location.origin;
+        let currentShopId = sessionStorage.getItem("shopId") || null;
         let shopData = { shopName: "OtoServis Pro", phone: "", address: "", iban: "", logoUrl: "" };
 
         window.onload = function() {
-            if (sessionStorage.getItem("adminAuth") === "true") {
+            if (sessionStorage.getItem("shopAuth") === "true" && currentShopId) {
                 document.getElementById("loginOverlay").classList.add("hidden");
                 loadShopSettings();
                 fetchUpcomingMaintenances();
@@ -829,25 +831,42 @@
             if (tabName === 'appointments') fetchAppointments();
         }
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
-            const pass = document.getElementById("adminPassword").value;
-            if (pass === ADMIN_PASS) {
-                sessionStorage.setItem("adminAuth", "true");
-                document.getElementById("loginOverlay").classList.add("hidden");
-                loadShopSettings();
-                fetchUpcomingMaintenances();
-                loadCustomers();
-                fetchStockItems();
-                fetchFinanceRecords();
-                fetchAppointments();
-            } else {
-                document.getElementById("loginError").classList.remove("hidden");
+            const shopCode = document.getElementById("loginShopCode").value.trim();
+            const password = document.getElementById("adminPassword").value;
+
+            try {
+                const res = await fetch('/api/Services/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ shopCode, password })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    sessionStorage.setItem("shopAuth", "true");
+                    sessionStorage.setItem("shopId", data.shopId);
+                    currentShopId = data.shopId;
+
+                    document.getElementById("loginOverlay").classList.add("hidden");
+                    loadShopSettings();
+                    fetchUpcomingMaintenances();
+                    loadCustomers();
+                    fetchStockItems();
+                    fetchFinanceRecords();
+                    fetchAppointments();
+                } else {
+                    document.getElementById("loginError").classList.remove("hidden");
+                }
+            } catch (err) {
+                alert("Giriş sırasında bağlantı hatası oluştu.");
             }
         }
 
         function logout() {
-            sessionStorage.removeItem("adminAuth");
+            sessionStorage.removeItem("shopAuth");
+            sessionStorage.removeItem("shopId");
             location.reload();
         }
 
@@ -859,7 +878,7 @@
 
         async function loadShopSettings() {
             try {
-                const res = await fetch('/api/Services/shop-settings');
+                const res = await fetch(`/api/Services/shop-settings?shopId=${currentShopId}`);
                 if (res.ok) {
                     shopData = await res.json();
                     const sName = shopData.shopName || shopData.ShopName || 'OtoServis Pro';
@@ -876,6 +895,7 @@
         async function saveShopSettings(e) {
             e.preventDefault();
             const payload = {
+                shopId: parseInt(currentShopId),
                 shopName: document.getElementById('cfgShopName').value.trim(),
                 phone: document.getElementById('cfgPhone').value.trim(),
                 iban: document.getElementById('cfgIban').value.trim(),
@@ -921,7 +941,7 @@
         async function fetchUpcomingMaintenances() {
             const tbody = document.getElementById('maintenanceTableBody');
             try {
-                const res = await fetch('/api/Services/upcoming-maintenances');
+                const res = await fetch(`/api/Services/upcoming-maintenances?shopId=${currentShopId}`);
                 if (res.ok) {
                     const list = await res.json();
                     tbody.innerHTML = '';
@@ -980,7 +1000,7 @@
         async function loadCustomers() {
             const tbody = document.getElementById('customerTableBody');
             try {
-                const res = await fetch('/api/Services/upcoming-maintenances');
+                const res = await fetch(`/api/Services/upcoming-maintenances?shopId=${currentShopId}`);
                 if (res.ok) {
                     const list = await res.json();
                     tbody.innerHTML = '';
@@ -1039,6 +1059,7 @@
             const notVal = getVal('ustaNotu') || getVal('mechanicNote');
 
             const payload = {
+                shopId: parseInt(currentShopId),
                 plaka: plakaVal,
                 plate: plakaVal,
                 marka: markaVal,
@@ -1084,7 +1105,7 @@
             const cleanSearch = searchInput.replace(/\s+/g, '').toUpperCase();
 
             try {
-                const res = await fetch(`/api/Services/search/${encodeURIComponent(cleanSearch)}`);
+                const res = await fetch(`/api/Services/search/${encodeURIComponent(cleanSearch)}?shopId=${currentShopId}`);
                 if (res.ok) {
                     currentVehicleData = await res.json();
                     renderAdminView();
@@ -1349,11 +1370,11 @@
             html2pdf().from(element).save(`Is_Emri_${plate}.pdf`);
         }
 
-        // --- STOK YÖNETİMİ JAVASCRIPT KODLARI --- //
+        // --- STOK YÖNETİMİ --- //
 
         async function fetchStockItems() {
             try {
-                const res = await fetch('/api/Services/stock');
+                const res = await fetch(`/api/Services/stock?shopId=${currentShopId}`);
                 if (res.ok) {
                     const items = await res.json();
                     renderStockView(items);
@@ -1410,6 +1431,7 @@
             e.preventDefault();
             const inputs = e.target.querySelectorAll('input');
             const payload = {
+                shopId: parseInt(currentShopId),
                 name: inputs[0].value,
                 sku: inputs[1].value.toUpperCase(),
                 purchasePrice: parseFloat(inputs[2].value),
@@ -1441,20 +1463,11 @@
             if (res.ok) fetchStockItems();
         }
 
-        document.querySelector('#tab-stock input[placeholder="Parça Ara..."]').addEventListener('input', function(e) {
-            const term = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('#tab-stock tbody tr');
-            rows.forEach(row => {
-                if(row.innerText.toLowerCase().includes(term)) row.style.display = '';
-                else row.style.display = 'none';
-            });
-        });
-
-        // --- FİNANS YÖNETİMİ JAVASCRIPT KODLARI --- //
+        // --- FİNANS YÖNETİMİ --- //
 
         async function fetchFinanceRecords() {
             try {
-                const res = await fetch('/api/Services/finance');
+                const res = await fetch(`/api/Services/finance?shopId=${currentShopId}`);
                 if (res.ok) {
                     const records = await res.json();
                     renderFinanceView(records);
@@ -1512,7 +1525,7 @@
             const desc = e.target.querySelector('input[placeholder*="Örn:"]').value;
             const amount = parseFloat(e.target.querySelector('input[type="number"]').value);
 
-            const payload = { description: desc, type: type, amount: amount };
+            const payload = { shopId: parseInt(currentShopId), description: desc, type: type, amount: amount };
 
             try {
                 const res = await fetch('/api/Services/finance', {
@@ -1532,11 +1545,11 @@
             }
         }
 
-        // --- RANDEVU YÖNETİMİ JAVASCRIPT KODLARI --- //
+        // --- RANDEVU YÖNETİMİ --- //
 
         async function fetchAppointments() {
             try {
-                const res = await fetch('/api/Services/appointments');
+                const res = await fetch(`/api/Services/appointments?shopId=${currentShopId}`);
                 if (res.ok) {
                     const list = await res.json();
                     renderAppointmentsView(list);
@@ -1588,6 +1601,7 @@
             const appointmentDateTime = `${date}T${time}:00`;
 
             const payload = {
+                shopId: parseInt(currentShopId),
                 customerName: customerName,
                 plate: plate,
                 appointmentDate: appointmentDateTime,
@@ -1618,7 +1632,7 @@
             if (res.ok) fetchAppointments();
         }
 
-        // --- ARAÇ KABUL & ÇİZİK HARİTASI JAVASCRIPT KODLARI --- //
+        // --- ARAÇ KABUL & ÇİZİK HARİTASI --- //
 
         async function fetchDamages() {
             const plateInput = document.getElementById('damageSearchPlate');
@@ -1633,7 +1647,7 @@
             tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">Yükleniyor...</td></tr>`;
 
             try {
-                const res = await fetch(`/api/Services/damages/${encodeURIComponent(cleanPlate)}`);
+                const res = await fetch(`/api/Services/damages/${encodeURIComponent(cleanPlate)}?shopId=${currentShopId}`);
                 if (res.ok) {
                     const list = await res.json();
                     tbody.innerHTML = '';
@@ -1673,7 +1687,7 @@
             const damageType = document.getElementById('damageType').value;
             const description = document.getElementById('damageDesc').value.trim();
 
-            const payload = { plate, region, damageType, description };
+            const payload = { shopId: parseInt(currentShopId), plate, region, damageType, description };
 
             try {
                 const res = await fetch('/api/Services/damages', {

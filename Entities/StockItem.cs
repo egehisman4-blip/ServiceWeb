@@ -7,6 +7,7 @@ namespace mepa_servis.Entities
         public string Sku { get; set; } = string.Empty;  // Stok Kodu
         public decimal PurchasePrice { get; set; }       // Alış Fiyatı
         public decimal SalePrice { get; set; }           // Satış Fiyatı
-        public int Quantity { get; set; }                // Mevcut Adet
+        public int Quantity { get; set; } 
+        public int ShopId { get; set; }               // Mevcut Adet
     }
 }

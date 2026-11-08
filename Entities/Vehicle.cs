@@ -15,6 +15,7 @@ namespace mepa_servis.Entities
         public DateTime LastKmUpdateDate { get; set; } = DateTime.Now; // Son Güncelleme Tarihi
         public string OwnerName { get; set; } = string.Empty;
         public string OwnerPhone { get; set; } = string.Empty;
+        public int ShopId { get; set; }
 
         public List<ServiceRecord> ServiceRecords { get; set; } = new List<ServiceRecord>();
     }

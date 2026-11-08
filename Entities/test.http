@@ -2,10 +2,23 @@ POST https://serviceweb-twt6.onrender.com/api/Services/register-shop
 Content-Type: application/json
 
 {
-  "shopCode": "yildizoto",
-  "shopName": "Yıldız Oto Servis",
-  "passwordHash": "sifre123",
-  "phone": "0555 444 33 22",
-  "address": "Ankara Sanayi Sitesi",
-  "iban": "TR33 0000 0000 0000 0000 00"
+  "shopCode": "KARAOĞLU",
+  "shopName": "Karaoğlu Oto Elektrik & Klima",
+  "passwordHash": "1234",
+  "phone": "0212 654 55 82",
+  "address": "İstanbul Bahçelievler Kocasinan Sanayi Sitesi C-2 Blok No: 12",
+  "iban": ""
+}
+
+###
+
+POST https://serviceweb-twt6.onrender.com/api/Services/register-shop
+Content-Type: application/json
+{
+  "shopCode": "TEST",
+  "shopName": "Test_AdminPanel",
+  "passwordHash": "344965",
+  "phone": "",
+  "address": "İstanbul Bahçelievler Kocasinan Sanayi Sitesi C-2 Blok No: 12",
+  "iban": ""
 }

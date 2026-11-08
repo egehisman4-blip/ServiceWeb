@@ -289,5 +289,35 @@ namespace mepa_servis.Controllers
             await _context.SaveChangesAsync();
             return Ok();
         }
+        // --- RANDEVU YÖNETİMİ API UÇLARI --- //
+
+        [HttpGet("appointments")]
+        public async Task<IActionResult> GetAppointments()
+        {
+            var list = await _context.Appointments.OrderBy(a => a.AppointmentDate).ToListAsync();
+            return Ok(list);
+        }
+
+        [HttpPost("appointments")]
+        public async Task<IActionResult> AddAppointment([FromBody] Appointment appointment)
+        {
+            if (string.IsNullOrWhiteSpace(appointment.CustomerName) || string.IsNullOrWhiteSpace(appointment.Plate))
+                return BadRequest("Müşteri adı ve plaka zorunludur.");
+
+            _context.Appointments.Add(appointment);
+            await _context.SaveChangesAsync();
+            return Ok(appointment);
+        }
+
+        [HttpDelete("appointments/{id}")]
+        public async Task<IActionResult> DeleteAppointment(int id)
+        {
+            var appointment = await _context.Appointments.FindAsync(id);
+            if (appointment == null) return NotFound();
+
+            _context.Appointments.Remove(appointment);
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
     }
 }

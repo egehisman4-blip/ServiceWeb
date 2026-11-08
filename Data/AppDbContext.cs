@@ -16,6 +16,7 @@ namespace mepa_servis.Data
         public DbSet<StockItem> StockItems { get; set; }
 
         public DbSet<FinanceRecord> FinanceRecords { get; set; }
+        public DbSet<Appointment> Appointments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

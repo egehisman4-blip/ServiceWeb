@@ -665,7 +665,7 @@
                 <!-- Randevu Ekleme -->
                 <div class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-6 h-fit">
                     <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-calendar-plus text-blue-500 mr-2"></i>Yeni Randevu Oluştur</h3>
-                    <form onsubmit="dummyAction(event, 'Randevu Kaydı')" class="space-y-4">
+                    <form onsubmit="handleAddAppointment(event)" class="space-y-4">
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1">Müşteri Ad Soyad</label>
                             <input type="text" placeholder="Müşteri Adı" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
@@ -707,7 +707,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-800">
-                                <tr><td colspan="5" class="p-4 text-center text-slate-500">Henüz randevu eklenmedi (Backend bekleniyor).</td></tr>
+                                <tr><td colspan="5" class="p-4 text-center text-slate-500">Yükleniyor...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -779,12 +779,13 @@
                 loadCustomers();
                 fetchStockItems();
                 fetchFinanceRecords();
+                fetchAppointments();
             }
         };
 
         function dummyAction(e, actionName) {
             e.preventDefault();
-            alert(`${actionName} işlemi arayüzde çalışıyor.\nVeritabanı bağlantıları bir sonraki aşamada yapılacaktır.`);
+            alert(`${actionName} işlemi arayüzde çalışıyor.`);
         }
 
         function switchTab(tabName) {
@@ -804,6 +805,7 @@
             if (tabName === 'customers') loadCustomers();
             if (tabName === 'stock') fetchStockItems();
             if (tabName === 'finance') fetchFinanceRecords();
+            if (tabName === 'appointments') fetchAppointments();
         }
 
         function handleLogin(e) {
@@ -817,6 +819,7 @@
                 loadCustomers();
                 fetchStockItems();
                 fetchFinanceRecords();
+                fetchAppointments();
             } else {
                 document.getElementById("loginError").classList.remove("hidden");
             }
@@ -1506,6 +1509,92 @@
             } catch (err) {
                 alert("Bağlantı hatası.");
             }
+        }
+
+        // --- RANDEVU YÖNETİMİ JAVASCRIPT KODLARI --- //
+
+        async function fetchAppointments() {
+            try {
+                const res = await fetch('/api/Services/appointments');
+                if (res.ok) {
+                    const list = await res.json();
+                    renderAppointmentsView(list);
+                }
+            } catch (err) {
+                console.error("Randevular çekilemedi:", err);
+            }
+        }
+
+        function renderAppointmentsView(list) {
+            const tbody = document.querySelector('#tab-appointments tbody');
+            tbody.innerHTML = '';
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">Yaklaşan randevu bulunmuyor.</td></tr>`;
+            } else {
+                list.forEach(a => {
+                    const dateObj = new Date(a.appointmentDate);
+                    const dateStr = dateObj.toLocaleDateString('tr-TR');
+                    const timeStr = dateObj.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-800/80 transition-all border-b border-slate-800/50">
+                            <td class="p-3 font-mono text-amber-400 font-bold">${dateStr} - ${timeStr}</td>
+                            <td class="p-3 font-semibold text-white">${a.customerName}</td>
+                            <td class="p-3 font-mono text-blue-400 uppercase font-bold">${a.plate}</td>
+                            <td class="p-3 text-slate-300">${a.note || '-'}</td>
+                            <td class="p-3 text-right">
+                                <button onclick="deleteAppointment(${a.id})" class="text-red-400 hover:text-red-300 transition-all">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        async function handleAddAppointment(e) {
+            e.preventDefault();
+            const inputs = e.target.querySelectorAll('input');
+            
+            const customerName = inputs[0].value.trim();
+            const plate = inputs[1].value.toUpperCase().trim();
+            const date = inputs[2].value;
+            const time = inputs[3].value;
+            const note = inputs[4].value.trim();
+
+            const appointmentDateTime = `${date}T${time}:00`;
+
+            const payload = {
+                customerName: customerName,
+                plate: plate,
+                appointmentDate: appointmentDateTime,
+                note: note
+            };
+
+            try {
+                const res = await fetch('/api/Services/appointments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    e.target.reset();
+                    fetchAppointments();
+                } else {
+                    alert("Randevu kaydedilemedi.");
+                }
+            } catch (err) {
+                alert("Bağlantı hatası.");
+            }
+        }
+
+        async function deleteAppointment(id) {
+            if (!confirm("Bu randevuyu silmek istediğinize emin misiniz?")) return;
+            const res = await fetch(`/api/Services/appointments/${id}`, { method: 'DELETE' });
+            if (res.ok) fetchAppointments();
         }
 
     </script>

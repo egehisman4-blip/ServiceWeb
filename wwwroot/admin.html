@@ -98,7 +98,7 @@
                     </div>
                 </div>
 
-                <!-- Gelişmiş Özellikler (Tüm Kilitler Açık) -->
+                <!-- Gelişmiş Özellikler -->
                 <div>
                     <div class="text-[10px] font-bold uppercase tracking-wider text-amber-500/80 mb-2 px-2 flex items-center justify-between">
                         <span>Gelişmiş Özellikler</span>
@@ -490,7 +490,7 @@
             </div>
         </section>
 
-        <!-- TAB 6: STOK YÖNETİMİ (AKTİF) -->
+        <!-- TAB 6: STOK YÖNETİMİ -->
         <section id="tab-stock" class="tab-content hidden space-y-6">
             <div>
                 <h2 class="text-xl font-bold text-white">Yedek Parça & Stok Yönetimi</h2>
@@ -608,7 +608,7 @@
                 <!-- İşlem Ekleme Formu -->
                 <div class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-6 h-fit">
                     <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-money-bill-transfer text-amber-500 mr-2"></i>Manuel Finans İşlemi</h3>
-                    <form onsubmit="dummyAction(event, 'Finans İşlemi')" class="space-y-4">
+                    <form onsubmit="handleAddFinance(event)" class="space-y-4">
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1">İşlem Türü</label>
                             <div class="flex gap-2">
@@ -646,7 +646,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-800">
-                                <tr><td colspan="4" class="p-4 text-center text-slate-500">Kayıt bulunamadı (Backend bekleniyor).</td></tr>
+                                <tr><td colspan="4" class="p-4 text-center text-slate-500">Yükleniyor...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -777,14 +777,14 @@
                 loadShopSettings();
                 fetchUpcomingMaintenances();
                 loadCustomers();
-                fetchStockItems(); // Sayfa açılışında stokları getir
+                fetchStockItems();
+                fetchFinanceRecords();
             }
         };
 
-        // KİLİTLİ MODÜLLER İÇİN GEÇİCİ UYARI FONKSİYONU
         function dummyAction(e, actionName) {
             e.preventDefault();
-            alert(`${actionName} işlemi arayüzde çalışıyor.\nVeritabanı (C# Entity) bağlantıları bir sonraki aşamada yapılacaktır.`);
+            alert(`${actionName} işlemi arayüzde çalışıyor.\nVeritabanı bağlantıları bir sonraki aşamada yapılacaktır.`);
         }
 
         function switchTab(tabName) {
@@ -803,6 +803,7 @@
 
             if (tabName === 'customers') loadCustomers();
             if (tabName === 'stock') fetchStockItems();
+            if (tabName === 'finance') fetchFinanceRecords();
         }
 
         function handleLogin(e) {
@@ -815,6 +816,7 @@
                 fetchUpcomingMaintenances();
                 loadCustomers();
                 fetchStockItems();
+                fetchFinanceRecords();
             } else {
                 document.getElementById("loginError").classList.remove("hidden");
             }
@@ -1323,7 +1325,7 @@
             html2pdf().from(element).save(`Is_Emri_${plate}.pdf`);
         }
 
-        // --- YENİ STOK YÖNETİMİ JAVASCRIPT KODLARI --- //
+        // --- STOK YÖNETİMİ JAVASCRIPT KODLARI --- //
 
         async function fetchStockItems() {
             try {
@@ -1350,7 +1352,7 @@
                 items.forEach(item => {
                     const cost = item.purchasePrice * item.quantity;
                     totalCost += cost;
-                    if (item.quantity <= 5) criticalCount++; // Kritik stok sınırı: 5
+                    if (item.quantity <= 5) criticalCount++;
 
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-800/80 transition-all border-b border-slate-800/50">
@@ -1375,10 +1377,9 @@
                 });
             }
 
-            // İstatistik Kartlarını Güncelle
-            document.querySelectorAll('#tab-stock .text-xl.font-black.text-white')[0].innerText = items.length; // Çeşit
-            document.querySelectorAll('#tab-stock .text-xl.font-black.text-white')[1].innerText = criticalCount; // Kritik
-            document.querySelectorAll('#tab-stock .text-xl.font-black.text-white')[2].innerText = `${totalCost.toLocaleString('tr-TR')} ₺`; // Toplam Maliyet
+            document.querySelectorAll('#tab-stock .text-xl.font-black.text-white')[0].innerText = items.length;
+            document.querySelectorAll('#tab-stock .text-xl.font-black.text-white')[1].innerText = criticalCount;
+            document.querySelectorAll('#tab-stock .text-xl.font-black.text-white')[2].innerText = `${totalCost.toLocaleString('tr-TR')} ₺`;
         }
 
         async function handleAddStock(e) {
@@ -1416,7 +1417,6 @@
             if (res.ok) fetchStockItems();
         }
 
-        // Arama Filtresi İçin
         document.querySelector('#tab-stock input[placeholder="Parça Ara..."]').addEventListener('input', function(e) {
             const term = e.target.value.toLowerCase();
             const rows = document.querySelectorAll('#tab-stock tbody tr');
@@ -1425,6 +1425,88 @@
                 else row.style.display = 'none';
             });
         });
+
+        // --- FİNANS YÖNETİMİ JAVASCRIPT KODLARI --- //
+
+        async function fetchFinanceRecords() {
+            try {
+                const res = await fetch('/api/Services/finance');
+                if (res.ok) {
+                    const records = await res.json();
+                    renderFinanceView(records);
+                }
+            } catch (err) {
+                console.error("Finans verileri çekilemedi:", err);
+            }
+        }
+
+        function renderFinanceView(records) {
+            const tbody = document.querySelector('#tab-finance tbody');
+            tbody.innerHTML = '';
+
+            let totalIncome = 0;
+            let totalExpense = 0;
+
+            if (records.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">Henüz finansal işlem bulunmuyor.</td></tr>`;
+            } else {
+                records.forEach(r => {
+                    if (r.type === 'income') totalIncome += r.amount;
+                    else totalExpense += r.amount;
+
+                    const dateStr = new Date(r.date).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    const typeBadge = r.type === 'income' 
+                        ? `<span class="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded">Gelir</span>` 
+                        : `<span class="text-red-400 font-bold bg-red-500/10 px-2 py-0.5 rounded">Gider</span>`;
+                    
+                    const amountClass = r.type === 'income' ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold';
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-800/80 transition-all border-b border-slate-800/50">
+                            <td class="p-3 text-slate-400 text-xs">${dateStr}</td>
+                            <td class="p-3 font-semibold text-white">${r.description}</td>
+                            <td class="p-3">${typeBadge}</td>
+                            <td class="p-3 text-right font-mono ${amountClass}">${r.type === 'income' ? '+' : '-'}${r.amount.toLocaleString('tr-TR')} ₺</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            const netKas = totalIncome - totalExpense;
+            const cards = document.querySelectorAll('#tab-finance .text-2xl.font-black.text-white');
+            if (cards.length >= 3) {
+                cards[0].innerText = `${netKas.toLocaleString('tr-TR')} ₺`;
+                cards[0].className = `text-2xl font-black ${netKas >= 0 ? 'text-emerald-400' : 'text-red-400'}`;
+                cards[1].innerText = `${totalIncome.toLocaleString('tr-TR')} ₺`;
+                cards[2].innerText = `${totalExpense.toLocaleString('tr-TR')} ₺`;
+            }
+        }
+
+        async function handleAddFinance(e) {
+            e.preventDefault();
+            const type = document.querySelector('input[name="financeType"]:checked').value;
+            const desc = e.target.querySelector('input[placeholder*="Örn:"]').value;
+            const amount = parseFloat(e.target.querySelector('input[type="number"]').value);
+
+            const payload = { description: desc, type: type, amount: amount };
+
+            try {
+                const res = await fetch('/api/Services/finance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    e.target.reset();
+                    fetchFinanceRecords();
+                } else {
+                    alert("İşlem kaydedilemedi.");
+                }
+            } catch (err) {
+                alert("Bağlantı hatası.");
+            }
+        }
 
     </script>
 </body>

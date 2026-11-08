@@ -217,7 +217,7 @@ namespace mepa_servis.Controllers
             return Ok(record);
         }
 
-        // --- YENİ: STOK YÖNETİMİ API UÇLARI --- //
+        // --- STOK YÖNETİMİ API UÇLARI --- //
 
         [HttpGet("stock")]
         public async Task<IActionResult> GetStockItems()
@@ -235,7 +235,7 @@ namespace mepa_servis.Controllers
 
             if (existingItem != null)
             {
-                existingItem.Quantity += input.Quantity; // Var olan parçaysa adedi artır
+                existingItem.Quantity += input.Quantity;
                 existingItem.PurchasePrice = input.PurchasePrice;
                 existingItem.SalePrice = input.SalePrice;
             }
@@ -255,6 +255,37 @@ namespace mepa_servis.Controllers
             if (item == null) return NotFound();
 
             _context.StockItems.Remove(item);
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        // --- FİNANS & CİRO YÖNETİMİ API UÇLARI --- //
+
+        [HttpGet("finance")]
+        public async Task<IActionResult> GetFinanceRecords()
+        {
+            var records = await _context.FinanceRecords.OrderByDescending(f => f.Date).ToListAsync();
+            return Ok(records);
+        }
+
+        [HttpPost("finance")]
+        public async Task<IActionResult> AddFinanceRecord([FromBody] FinanceRecord record)
+        {
+            if (string.IsNullOrWhiteSpace(record.Description)) return BadRequest("Açıklama zorunludur.");
+            
+            record.Date = DateTime.Now;
+            _context.FinanceRecords.Add(record);
+            await _context.SaveChangesAsync();
+            return Ok(record);
+        }
+
+        [HttpDelete("finance/{id}")]
+        public async Task<IActionResult> DeleteFinanceRecord(int id)
+        {
+            var record = await _context.FinanceRecords.FindAsync(id);
+            if (record == null) return NotFound();
+
+            _context.FinanceRecords.Remove(record);
             await _context.SaveChangesAsync();
             return Ok();
         }

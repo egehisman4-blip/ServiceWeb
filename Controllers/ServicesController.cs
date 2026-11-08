@@ -142,6 +142,25 @@ namespace mepa_servis.Controllers
             }
         }
 
+        // USTANIN KİLOMETRE GÜNCELLEMESİ İÇİN YENİ ENDPOINT
+        [HttpPatch("update-km/{vehicleId}")]
+        public async Task<IActionResult> UpdateVehicleKm(int vehicleId, [FromBody] int newKm)
+        {
+            var vehicle = await _context.Vehicles.FindAsync(vehicleId);
+            if (vehicle == null) return NotFound("Araç bulunamadı.");
+
+            if (vehicle.InitialKm == 0)
+            {
+                vehicle.InitialKm = vehicle.CurrentKm;
+            }
+
+            vehicle.CurrentKm = newKm;
+            vehicle.LastKmUpdateDate = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            return Ok(vehicle);
+        }
+
         [HttpPost("add-item/{recordId}")]
         public async Task<IActionResult> AddItem(int recordId, [FromBody] ServiceItem item)
         {
@@ -175,7 +194,6 @@ namespace mepa_servis.Controllers
             return Ok();
         }
 
-        // DÜZELTİLEN YER: (int id) olarak güncellendi
         [HttpDelete("delete-vehicle/{id}")]
         public async Task<IActionResult> DeleteVehicle(int id)
         {

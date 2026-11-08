@@ -339,16 +339,29 @@
                                 </div>
                             </div>
 
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase">Canlı Durum Güncelle</label>
-                                <select id="admStatusSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white font-semibold focus:border-blue-500 focus:outline-none">
-                                    <option value="1">1 - Kabul Edildi</option>
-                                    <option value="2">2 - Teşhis Yapılıyor</option>
-                                    <option value="3">3 - Parça Bekliyor</option>
-                                    <option value="4">4 - İşlemde</option>
-                                    <option value="5">5 - Test Sürüşünde</option>
-                                    <option value="6">6 - Hazır / Teslim Edildi</option>
-                                </select>
+                            <!-- USTANIN GÜNCEL KM GİRİŞ ALANI -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Usta Tarafından Canlı KM Güncelle</label>
+                                    <div class="flex gap-2">
+                                        <input type="number" id="admCurrentKmInput" placeholder="Mevcut KM"
+                                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-blue-500">
+                                        <button onclick="updateVehicleKmByMaster()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all whitespace-nowrap">
+                                            KM Güncelle
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Canlı Durum Güncelle</label>
+                                    <select id="admStatusSelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white font-semibold focus:border-blue-500 focus:outline-none">
+                                        <option value="1">1 - Kabul Edildi</option>
+                                        <option value="2">2 - Teşhis Yapılıyor</option>
+                                        <option value="3">3 - Parça Bekliyor</option>
+                                        <option value="4">4 - İşlemde</option>
+                                        <option value="5">5 - Test Sürüşünde</option>
+                                        <option value="6">6 - Hazır / Teslim Edildi</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <div class="border-t border-slate-800 pt-4">
@@ -858,10 +871,12 @@
             const model = currentVehicleData.model || currentVehicleData.Model;
             const ownerName = currentVehicleData.musteriAdSoyad || currentVehicleData.MusteriAdSoyad || currentVehicleData.ownerName || currentVehicleData.OwnerName;
             const ownerPhone = currentVehicleData.musteriTelefon || currentVehicleData.MusteriTelefon || currentVehicleData.ownerPhone || currentVehicleData.OwnerPhone;
+            const currentKm = currentVehicleData.mevcutKm !== undefined ? currentVehicleData.mevcutKm : (currentVehicleData.currentKm !== undefined ? currentVehicleData.currentKm : currentVehicleData.CurrentKm);
 
             document.getElementById('admPlate').innerText = plate;
             document.getElementById('admCar').innerText = `${brand} ${model}`;
             document.getElementById('admOwner').innerText = `${ownerName} (${ownerPhone})`;
+            document.getElementById('admCurrentKmInput').value = currentKm || '';
             document.getElementById('modalHistorySubtitle').innerText = `${plate} - ${brand} ${model} (${ownerName})`;
 
             const records = currentVehicleData.serviceRecords || currentVehicleData.ServiceRecords || [];
@@ -930,6 +945,36 @@
             }
 
             document.getElementById('adminResult').classList.remove('hidden');
+        }
+
+        // USTANIN CANLI KİLOMETRE GÜNCELLEMESİ İÇİN JS FONKSİYONU
+        async function updateVehicleKmByMaster() {
+            if (!currentVehicleData) return;
+            const vId = currentVehicleData.id || currentVehicleData.Id;
+            const newKm = parseInt(document.getElementById('admCurrentKmInput').value);
+
+            if (!newKm || newKm <= 0) {
+                alert('Geçerli bir kilometre giriniz.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/Services/update-km/${vId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newKm)
+                });
+
+                if (res.ok) {
+                    alert('Araç kilometresi başarıyla güncellendi!');
+                    await fetchAdminVehicle();
+                    fetchUpcomingMaintenances();
+                } else {
+                    alert('Kilometre güncellenemedi.');
+                }
+            } catch (err) {
+                alert(`Hata: ${err.message}`);
+            }
         }
 
         async function handleAddServiceItem(e) {

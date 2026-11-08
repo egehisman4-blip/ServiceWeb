@@ -399,5 +399,15 @@ namespace mepa_servis.Controllers
 
             return Ok(new { message = "Dükkan başarıyla oluşturuldu!", shopId = newShop.Id });
         }
+        [HttpPost("update-password")]
+        public async Task<IActionResult> UpdatePassword([FromBody] LoginDto model)
+        {
+            var shop = await _context.Shops.FirstOrDefaultAsync(s => s.ShopCode.ToLower() == model.ShopCode.ToLower());
+            if (shop == null) return NotFound("Dükkan bulunamadı.");
+
+            shop.PasswordHash = model.Password;
+            await _context.SaveChangesAsync();
+            return Ok($"{shop.ShopCode} dükkanının şifresi başarıyla {model.Password} olarak güncellendi!");
+        }
     }
 }

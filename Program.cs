@@ -3,12 +3,16 @@ using mepa_servis.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Controller ve API Servislerini Ekle
-builder.Services.AddControllers();
+// 1. Controller ve JSON Sonsuz Döngü Engelleyicisi
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 2. SQLite Veritabanı Yolu (Hem Yerel Hem Render Sunucu Uyumlu)
+// 2. Veritabanı Konfigürasyonu
 var folder = Environment.SpecialFolder.LocalApplicationData;
 var path = Environment.GetFolderPath(folder);
 var dbPath = System.IO.Path.Join(path, "mepa.db");
@@ -16,32 +20,36 @@ var dbPath = System.IO.Path.Join(path, "mepa.db");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
 
+// 3. CORS Politikası
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy => policy.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
+});
+
 var app = builder.Build();
 
-// 3. Veritabanını Otomatik Oluştur / Migration Uygula
+// 4. Veritabanı ve Tabloları Otomatik Oluştur
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.EnsureCreated();
 }
 
-// 4. HTTP Pipeline Yapılandırması
+// 5. Middleware Konfigürasyonu
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
-// 5. Statik Dosya (wwwroot / index.html / admin.html) Sunumu
-app.UseDefaultFiles(); // index.html'i otomatik varsayılan yapar
-app.UseStaticFiles();  // wwwroot içindeki admin.html vb. dosyaların doğrudan açılmasını sağlar
-
+app.UseCors("AllowAll");
+app.UseStaticFiles();
+app.UseRouting();
 app.UseAuthorization();
-app.MapControllers();
 
-// 6. Doğrudan HTML dosyalarına erişim fallback tanımı
-app.MapFallbackToFile("index.html");
+app.MapControllers();
 
 app.Run();

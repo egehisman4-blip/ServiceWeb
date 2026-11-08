@@ -34,6 +34,37 @@
         </div>
     </div>
 
+    <!-- PRO ÖZELLİK KİLİTLİ POP-UP MODALI -->
+    <div id="proModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[110] flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-amber-500/30 w-full max-w-md rounded-2xl p-6 shadow-2xl text-center space-y-4">
+            <div class="bg-amber-500/10 text-amber-400 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto border border-amber-500/20">
+                <i class="fa-solid fa-crown text-3xl"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-extrabold text-white" id="proModalTitle">Pro Paket Özelliği</h3>
+                <p class="text-xs text-slate-400 mt-1.5 leading-relaxed" id="proModalDesc">
+                    Bu modül gelişmiş paket kapsamında sunulmaktadır. Lisansınızı yükselterek kullanmaya başlayabilirsiniz.
+                </p>
+            </div>
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-left space-y-1.5 text-xs text-slate-300">
+                <div class="flex items-center text-amber-400 font-semibold mb-1">
+                    <i class="fa-solid fa-sparkles mr-2"></i>Pro Pakette Neler Var?
+                </div>
+                <div id="proFeatureList" class="space-y-1 text-[11px] text-slate-400"></div>
+            </div>
+            <div class="pt-2 flex gap-3">
+                <button onclick="toggleProModal(false)" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl text-xs transition-all">
+                    Kapat
+                </button>
+                <a href="https://wa.me/905528674965?text=Merhaba,%20OtoServis%20Pro%20paket%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum." target="_blank" 
+                    class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-lg shadow-amber-600/20 flex items-center justify-center space-x-1">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    <span>Paketi Yükselt</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- GEÇMİŞ SERVİS KAYITLARI MODALI -->
     <div id="historyModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[95] flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
@@ -57,65 +88,100 @@
         </div>
     </div>
 
-    <!-- SOL SIDEBAR MENÜ -->
+    <!-- SOL SIDEBAR MENÜ (SAAS FREEMIUM MIMARI) -->
     <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex-shrink-0 flex flex-col justify-between min-h-screen">
-        <div class="p-5 space-y-6">
+        <div class="p-4 space-y-5 overflow-y-auto max-h-screen">
             <!-- Dükkan Logosu & Başlık -->
             <div class="flex items-center space-x-3 border-b border-slate-800 pb-4">
-                <div class="bg-blue-600 p-2.5 rounded-xl text-white">
+                <div class="bg-blue-600 p-2.5 rounded-xl text-white shadow-lg shadow-blue-600/20">
                     <i class="fa-solid fa-wrench text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-base text-white leading-tight" id="sidebarShopTitle">OTO SERVİS PRO</h1>
-                    <span class="inline-block bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold px-2 py-0.5 rounded mt-1">Canlı Panel</span>
+                    <h1 class="font-bold text-sm text-white leading-tight" id="sidebarShopTitle">OTO SERVİS PRO</h1>
+                    <span class="inline-block bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-bold px-2 py-0.5 rounded mt-1">Standart Sürüm</span>
                 </div>
             </div>
 
             <!-- Menü Linkleri -->
-            <nav class="space-y-1.5">
-                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-semibold transition-all bg-blue-600 text-white">
-                    <div class="flex items-center space-x-3">
-                        <i class="fa-solid fa-table-cells-large text-base w-5 text-center"></i>
-                        <div class="text-left">
-                            <div class="font-bold">Genel Bakış</div>
-                            <div class="text-[10px] opacity-70">İstatistikler ve özet</div>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                </button>
+            <nav class="space-y-4">
+                <!-- Temel Modüller -->
+                <div>
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2 px-2">Genel Servis</div>
+                    <div class="space-y-1">
+                        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all bg-blue-600 text-white">
+                            <div class="flex items-center space-x-2.5">
+                                <i class="fa-solid fa-table-cells-large text-sm w-4 text-center"></i>
+                                <span>Genel Bakış</span>
+                            </div>
+                        </button>
 
-                <button onclick="switchTab('vehicles')" id="nav-vehicles" class="nav-btn w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
-                    <div class="flex items-center space-x-3">
-                        <i class="fa-solid fa-car text-base w-5 text-center"></i>
-                        <div class="text-left">
-                            <div class="font-bold">Araç Yönetimi</div>
-                            <div class="text-[10px] opacity-70">Servis & parça takibi</div>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                </button>
+                        <button onclick="switchTab('vehicles')" id="nav-vehicles" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+                            <div class="flex items-center space-x-2.5">
+                                <i class="fa-solid fa-car text-sm w-4 text-center"></i>
+                                <span>Araç Yönetimi</span>
+                            </div>
+                        </button>
 
-                <button onclick="switchTab('customers')" id="nav-customers" class="nav-btn w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
-                    <div class="flex items-center space-x-3">
-                        <i class="fa-solid fa-users text-base w-5 text-center"></i>
-                        <div class="text-left">
-                            <div class="font-bold">Müşteriler</div>
-                            <div class="text-[10px] opacity-70">Müşteri listesi & iletişim</div>
-                        </div>
+                        <button onclick="switchTab('customers')" id="nav-customers" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+                            <div class="flex items-center space-x-2.5">
+                                <i class="fa-solid fa-users text-sm w-4 text-center"></i>
+                                <span>Müşteri Listesi</span>
+                            </div>
+                        </button>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                </button>
+                </div>
 
-                <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
-                    <div class="flex items-center space-x-3">
-                        <i class="fa-solid fa-gear text-base w-5 text-center"></i>
-                        <div class="text-left">
-                            <div class="font-bold">Ayarlar</div>
-                            <div class="text-[10px] opacity-70">İşletme ve sistem ayarları</div>
-                        </div>
+                <!-- Kilitli PRO Modüller -->
+                <div>
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-amber-500/80 mb-2 px-2 flex items-center justify-between">
+                        <span>Gelişmiş Özellikler</span>
+                        <i class="fa-solid fa-crown text-[10px]"></i>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                </button>
+                    <div class="space-y-1">
+                        <button onclick="showProLock('inspection')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-800/60 hover:text-slate-300 transition-all group">
+                            <div class="flex items-center space-x-2.5">
+                                <i class="fa-solid fa-car-on text-sm w-4 text-center group-hover:text-amber-400 transition-colors"></i>
+                                <span>Kabul & Çizik Haritası</span>
+                            </div>
+                            <i class="fa-solid fa-lock text-[10px] text-amber-500/70"></i>
+                        </button>
+
+                        <button onclick="showProLock('stock')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-800/60 hover:text-slate-300 transition-all group">
+                            <div class="flex items-center space-x-2.5">
+                                <i class="fa-solid fa-boxes-stacked text-sm w-4 text-center group-hover:text-amber-400 transition-colors"></i>
+                                <span>Yedek Parça Stok</span>
+                            </div>
+                            <i class="fa-solid fa-lock text-[10px] text-amber-500/70"></i>
+                        </button>
+
+                        <button onclick="showProLock('finance')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-800/60 hover:text-slate-300 transition-all group">
+                            <div class="flex items-center space-x-2.5">
+                                <i class="fa-solid fa-wallet text-sm w-4 text-center group-hover:text-amber-400 transition-colors"></i>
+                                <span>Gelir / Gider & Ciro</span>
+                            </div>
+                            <i class="fa-solid fa-lock text-[10px] text-amber-500/70"></i>
+                        </button>
+
+                        <button onclick="showProLock('appointments')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-800/60 hover:text-slate-300 transition-all group">
+                            <div class="flex items-center space-x-2.5">
+                                <i class="fa-solid fa-calendar-check text-sm w-4 text-center group-hover:text-amber-400 transition-colors"></i>
+                                <span>Randevu Yönetimi</span>
+                            </div>
+                            <i class="fa-solid fa-lock text-[10px] text-amber-500/70"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Ayarlar -->
+                <div>
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2 px-2">Sistem</div>
+                    <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+                        <div class="flex items-center space-x-2.5">
+                            <i class="fa-solid fa-gear text-sm w-4 text-center"></i>
+                            <span>Dükkan Ayarları</span>
+                        </div>
+                    </button>
+                </div>
             </nav>
         </div>
 
@@ -448,6 +514,29 @@
         const baseUrl = window.location.origin;
         let shopData = { shopName: "OtoServis Pro", phone: "", address: "", iban: "", logoUrl: "" };
 
+        const proFeatureMap = {
+            inspection: {
+                title: "Kabul & Çizik Haritası (Pro)",
+                desc: "Aracın servise girdiğindeki çizik, göçük ve kaporta durumunu 3D araç şeması üzerinde işaretleme ve araç içi/dışı fotoğraflarını yükleme modülü.",
+                features: ["360° Kaporta Çizik İşaretleme", "Araç Kabul Fotoğraf Galeri", "Yakıt & KM Giriş Protokolü"]
+            },
+            stock: {
+                title: "Yedek Parça & Stok Yönetimi (Pro)",
+                desc: "Dükkandaki yağ, filtre, balata gibi stok parçalarını tanımlama, alış-satış fiyat takibi ve otomatik stok düşme sistemi.",
+                features: ["Otomatik Stok Adet Düşümü", "Kritik Stok Uyarı Sistemi", "Tedarikçi & Parça Maliyet Raporu"]
+            },
+            finance: {
+                title: "Gelir / Gider & Ciro Paneli (Pro)",
+                desc: "Günlük ciro, aylık net kâr, ödenmemiş müşteri borçları ve dükkan giderlerinin otomatik finansal grafik takibi.",
+                features: ["Günlük / Aylık Net Kâr Hesabı", "Veresiye & Borçlu Müşteri Takibi", "Excel / PDF Finansal Raporlama"]
+            },
+            appointments: {
+                title: "Randevu Takvim Yönetimi (Pro)",
+                desc: "Müşterilerin dükkana gelmeden önce online randevu oluşturması ve takvim üzerinden lift/usta planlaması.",
+                features: ["Online Müşteri Randevu Ekranı", "Otomatik SMS/WhatsApp Hatırlatıcı", "Dükkan Lift Doluluk Takvimi"]
+            }
+        };
+
         window.onload = function() {
             if (sessionStorage.getItem("adminAuth") === "true") {
                 document.getElementById("loginOverlay").classList.add("hidden");
@@ -456,6 +545,28 @@
                 loadCustomers();
             }
         };
+
+        function showProLock(key) {
+            const info = proFeatureMap[key];
+            if (!info) return;
+
+            document.getElementById('proModalTitle').innerText = info.title;
+            document.getElementById('proModalDesc').innerText = info.desc;
+            
+            const listDiv = document.getElementById('proFeatureList');
+            listDiv.innerHTML = '';
+            info.features.forEach(f => {
+                listDiv.innerHTML += `<div class="flex items-center"><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i>${f}</div>`;
+            });
+
+            toggleProModal(true);
+        }
+
+        function toggleProModal(show) {
+            const modal = document.getElementById("proModal");
+            if (show) modal.classList.remove("hidden");
+            else modal.classList.add("hidden");
+        }
 
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -466,8 +577,10 @@
 
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
             const activeBtn = document.getElementById(`nav-${tabName}`);
-            activeBtn.classList.remove('text-slate-400');
-            activeBtn.classList.add('bg-blue-600', 'text-white');
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-400');
+                activeBtn.classList.add('bg-blue-600', 'text-white');
+            }
 
             if (tabName === 'customers') loadCustomers();
         }

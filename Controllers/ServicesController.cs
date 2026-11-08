@@ -91,7 +91,9 @@ namespace mepa_servis.Controllers
                         Brand = input.Brand ?? "",
                         Model = input.Model ?? "",
                         Year = input.Year > 0 ? input.Year : 2024,
+                        InitialKm = input.CurrentKm > 0 ? input.CurrentKm : input.InitialKm,
                         CurrentKm = input.CurrentKm,
+                        LastKmUpdateDate = DateTime.Now,
                         OwnerName = input.OwnerName ?? "",
                         OwnerPhone = input.OwnerPhone ?? "",
                         ServiceRecords = new List<ServiceRecord>()
@@ -103,13 +105,19 @@ namespace mepa_servis.Controllers
                     vehicle.Brand = input.Brand ?? vehicle.Brand;
                     vehicle.Model = input.Model ?? vehicle.Model;
                     vehicle.Year = input.Year > 0 ? input.Year : vehicle.Year;
+                    
+                    if (vehicle.InitialKm == 0)
+                    {
+                        vehicle.InitialKm = vehicle.CurrentKm > 0 ? vehicle.CurrentKm : input.CurrentKm;
+                    }
+                    
                     vehicle.CurrentKm = input.CurrentKm;
+                    vehicle.LastKmUpdateDate = DateTime.Now;
                     vehicle.OwnerName = input.OwnerName ?? vehicle.OwnerName;
                     vehicle.OwnerPhone = input.OwnerPhone ?? vehicle.OwnerPhone;
                 }
 
-                // Tür dönüşümü (int) ve gelen ilk servis notu kontrolü
-                int nextKm = Convert.ToInt32((Math.Floor((double)input.CurrentKm / 10000) + 1) * 10000);
+                int nextKm = Convert.ToInt32((Math.Floor((double)(vehicle.InitialKm > 0 ? vehicle.InitialKm : vehicle.CurrentKm) / 10000) + 1) * 10000);
                 string note = input.ServiceRecords?.FirstOrDefault()?.MechanicNote ?? "Servis kaydı açıldı.";
 
                 var newRecord = new ServiceRecord
@@ -167,6 +175,7 @@ namespace mepa_servis.Controllers
             return Ok();
         }
 
+        // DÜZELTİLEN YER: (int id) olarak güncellendi
         [HttpDelete("delete-vehicle/{id}")]
         public async Task<IActionResult> DeleteVehicle(int id)
         {

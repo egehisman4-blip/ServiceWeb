@@ -88,7 +88,7 @@
         </div>
     </div>
 
-    <!-- SOL SIDEBAR MENÜ (SAAS FREEMIUM MIMARI) -->
+    <!-- SOL SIDEBAR MENÜ (SAAS FREEMIUM) -->
     <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex-shrink-0 flex flex-col justify-between min-h-screen">
         <div class="p-4 space-y-5 overflow-y-auto max-h-screen">
             <!-- Dükkan Logosu & Başlık -->
@@ -228,13 +228,14 @@
                                 <th class="p-3">Plaka</th>
                                 <th class="p-3">Araç</th>
                                 <th class="p-3">Müşteri</th>
-                                <th class="p-3">Mevcut KM</th>
+                                <th class="p-3">Giriş KM → Güncel KM</th>
+                                <th class="p-3">Son KM Güncelleme</th>
                                 <th class="p-3">Hedef Bakım KM</th>
                                 <th class="p-3 text-right">Aksiyon</th>
                             </tr>
                         </thead>
                         <tbody id="maintenanceTableBody" class="divide-y divide-slate-800">
-                            <tr><td colspan="6" class="p-4 text-center text-slate-500">Yükleniyor...</td></tr>
+                            <tr><td colspan="7" class="p-4 text-center text-slate-500">Yükleniyor...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -679,25 +680,39 @@
                     const list = await res.json();
                     tbody.innerHTML = '';
                     if (list.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">Kayıtlı araç bulunmuyor.</td></tr>`;
+                        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-500">Kayıtlı araç bulunmuyor.</td></tr>`;
                         return;
                     }
+
                     list.forEach(v => {
                         const plate = v.plaka || v.Plaka || v.plate || v.Plate;
                         const brand = v.marka || v.Marka || v.brand || v.Brand;
                         const model = v.model || v.Model;
                         const ownerName = v.musteriAdSoyad || v.MusteriAdSoyad || v.ownerName || v.OwnerName;
                         const ownerPhone = v.musteriTelefon || v.MusteriTelefon || v.ownerPhone || v.OwnerPhone;
+                        
                         const currentKm = v.mevcutKm !== undefined ? v.mevcutKm : (v.currentKm !== undefined ? v.currentKm : v.CurrentKm);
-                        const nextKm = v.hedefKm !== undefined ? v.hedefKm : (v.nextKm !== undefined ? v.nextKm : (currentKm + 10000));
+                        const initialKm = v.ilkKm !== undefined ? v.ilkKm : (v.initialKm !== undefined ? v.initialKm : (v.InitialKm || currentKm));
+                        
+                        const updateDateRaw = v.lastKmUpdateDate || v.LastKmUpdateDate || Date.now();
+                        const updateDate = new Date(updateDateRaw).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+                        const targetKm = (Math.floor(initialKm / 10000) + 1) * 10000;
 
                         tbody.innerHTML += `
                             <tr class="hover:bg-slate-800/80 transition-all">
                                 <td class="p-3 font-mono font-bold text-blue-400">${plate}</td>
                                 <td class="p-3 font-semibold text-white">${brand} ${model}</td>
                                 <td class="p-3">${ownerName} (${ownerPhone})</td>
-                                <td class="p-3 font-mono">${currentKm} KM</td>
-                                <td class="p-3 font-mono text-amber-400 font-bold">${nextKm} KM</td>
+                                <td class="p-3 font-mono">
+                                    <span class="text-slate-400">${initialKm} KM</span> 
+                                    <i class="fa-solid fa-arrow-right text-[10px] text-slate-500 mx-1"></i> 
+                                    <span class="text-emerald-400 font-bold">${currentKm} KM</span>
+                                </td>
+                                <td class="p-3 text-slate-400 text-[11px]">
+                                    <i class="fa-regular fa-clock mr-1"></i>${updateDate}
+                                </td>
+                                <td class="p-3 font-mono text-amber-400 font-bold">${targetKm} KM</td>
                                 <td class="p-3 text-right">
                                     <button onclick="sendMaintenanceReminder('${ownerName}', '${ownerPhone}', '${plate}', '${brand}', '${model}', ${currentKm})"
                                         class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition-all flex items-center space-x-1 ml-auto">
@@ -709,10 +724,10 @@
                         `;
                     });
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400">Veriler alınamadı.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-red-400">Veriler alınamadı.</td></tr>`;
                 }
             } catch (err) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400">Bağlantı hatası.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-red-400">Bağlantı hatası.</td></tr>`;
             }
         }
 

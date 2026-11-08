@@ -13,6 +13,8 @@ namespace mepa_servis.Data
         public DbSet<ShopSetting> ShopSettings { get; set; }
         public DbSet<ServiceItem> ServiceItems { get; set; }
 
+        public DbSet<StockItem> StockItems { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Vehicle>()

@@ -117,7 +117,8 @@ namespace mepa_servis.Controllers
                     vehicle.OwnerPhone = input.OwnerPhone ?? vehicle.OwnerPhone;
                 }
 
-                int nextKm = Convert.ToInt32((Math.Floor((double)(vehicle.InitialKm > 0 ? vehicle.InitialKm : vehicle.CurrentKm) / 10000) + 1) * 10000);
+                // HEDEF BAKIM KM DİNAMİK HESAPLAMA (GÜNCEL KM ÜZERİNDEN SONRAKİ 10.000)
+                int nextKm = Convert.ToInt32((Math.Floor((double)vehicle.CurrentKm / 10000) + 1) * 10000);
                 string note = input.ServiceRecords?.FirstOrDefault()?.MechanicNote ?? "Servis kaydı açıldı.";
 
                 var newRecord = new ServiceRecord
@@ -142,7 +143,6 @@ namespace mepa_servis.Controllers
             }
         }
 
-        // USTANIN KİLOMETRE GÜNCELLEMESİ İÇİN YENİ ENDPOINT
         [HttpPatch("update-km/{vehicleId}")]
         public async Task<IActionResult> UpdateVehicleKm(int vehicleId, [FromBody] int newKm)
         {

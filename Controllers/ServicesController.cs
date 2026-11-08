@@ -409,5 +409,13 @@ namespace mepa_servis.Controllers
             await _context.SaveChangesAsync();
             return Ok($"{shop.ShopCode} dükkanının şifresi başarıyla {model.Password} olarak güncellendi!");
         }
+        [HttpGet("upcoming-maintenances")]
+        public async Task<IActionResult> GetUpcomingMaintenances(int shopId)
+        {
+            var list = await _context.Vehicles
+                .Where(v => v.ShopId == shopId) // Dükkan izolasyonu burada olmalı!
+                .ToListAsync();
+            return Ok(list);
+        }
     }
 }

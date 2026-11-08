@@ -16,70 +16,107 @@ namespace mepa_servis.Controllers
             _context = context;
         }
 
-        // 1. Plaka ile Araç & Servis Geçmişi Getir
-        [HttpGet("search/{plate}")]
-        public async Task<IActionResult> GetByPlate(string plate)
+        // 1. Dükkan Ayarları (Getir)
+        [HttpGet("shop-settings")]
+        public async Task<IActionResult> GetShopSettings()
         {
-            var formattedPlate = plate.Replace(" ", "").ToUpper();
+            var setting = await _context.ShopSettings.FirstOrDefaultAsync();
+            if (setting == null)
+            {
+                setting = new ShopSetting { ShopName = "OtoServis Pro", Phone = "", Address = "", Iban = "", LogoUrl = "" };
+            }
+            return Ok(setting);
+        }
 
+        // 2. Dükkan Ayarları (Güncelle)
+        [HttpPut("shop-settings")]
+        public async Task<IActionResult> UpdateShopSettings([FromBody] ShopSetting setting)
+        {
+            var existing = await _context.ShopSettings.FirstOrDefaultAsync();
+            if (existing == null)
+            {
+                _context.ShopSettings.Add(setting);
+            }
+            else
+            {
+                existing.ShopName = setting.ShopName;
+                existing.Phone = setting.Phone;
+                existing.Address = setting.Address;
+                existing.Iban = setting.Iban;
+                existing.LogoUrl = setting.LogoUrl;
+                _context.ShopSettings.Update(existing);
+            }
+            await _context.SaveChangesAsync();
+            return Ok(setting);
+        }
+
+        // 3. Yaklaşan Bakımlar
+        [HttpGet("upcoming-maintenances")]
+        public async Task<IActionResult> GetUpcomingMaintenances()
+        {
+            var vehicles = await _context.Vehicles.ToListAsync();
+            return Ok(vehicles);
+        }
+
+        // 4. Plaka İle Arama
+        [HttpGet("search/{plaka}")]
+        public async Task<IActionResult> SearchByPlaka(string plaka)
+        {
+            if (string.IsNullOrWhiteSpace(plaka)) return BadRequest(new { message = "Plaka giriniz." });
+
+            var cleanPlaka = plaka.Replace(" ", "").ToUpper();
             var vehicle = await _context.Vehicles
                 .Include(v => v.ServiceRecords)
-                    .ThenInclude(sr => sr.ServiceItems)
-                .FirstOrDefaultAsync(v => v.Plate == formattedPlate);
+                .ThenInclude(r => r.ServiceItems)
+                .FirstOrDefaultAsync(v => v.Plate.Replace(" ", "").ToUpper() == cleanPlaka);
 
-            if (vehicle == null)
-                return NotFound(new { message = "Bu plakaya ait araç kaydı bulunamadı." });
+            if (vehicle == null) return NotFound(new { message = "Araç bulunamadı." });
 
             return Ok(vehicle);
         }
 
-        // 2. Yeni Araç / Servis Kaydı Aç
+        // 5. Araç / Servis Kaydı Açma
         [HttpPost("create-vehicle")]
         public async Task<IActionResult> CreateVehicle([FromBody] Vehicle vehicle)
         {
-            vehicle.Plate = vehicle.Plate.Replace(" ", "").ToUpper();
+            if (vehicle == null) return BadRequest("Geçersiz veri.");
 
-            // İlk kayıt açılırken hedef bakımı en yakın 10.000 katına yuvarlar
-            int targetKm = ((vehicle.CurrentKm / 10000) + 1) * 10000;
-            if (vehicle.ServiceRecords != null && vehicle.ServiceRecords.Any())
+            try
             {
-                foreach (var rec in vehicle.ServiceRecords)
+                vehicle.Plate = (vehicle.Plate ?? "").Replace(" ", "").ToUpper();
+
+                var existingVehicle = await _context.Vehicles
+                    .Include(v => v.ServiceRecords)
+                    .FirstOrDefaultAsync(v => v.Plate == vehicle.Plate);
+
+                if (existingVehicle != null)
                 {
-                    rec.NextMaintenanceKm = targetKm;
+                    existingVehicle.Brand = vehicle.Brand;
+                    existingVehicle.Model = vehicle.Model;
+                    existingVehicle.Year = vehicle.Year;
+                    existingVehicle.CurrentKm = vehicle.CurrentKm;
+                    existingVehicle.OwnerName = vehicle.OwnerName;
+                    existingVehicle.OwnerPhone = vehicle.OwnerPhone;
+
+                    _context.Vehicles.Update(existingVehicle);
                 }
+                else
+                {
+                    _context.Vehicles.Add(vehicle);
+                }
+
+                await _context.SaveChangesAsync();
+                return Ok(vehicle);
             }
-
-            _context.Vehicles.Add(vehicle);
-            await _context.SaveChangesAsync();
-
-            return Ok(vehicle);
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Veritabanı Kayıt Hatası: {ex.Message}");
+            }
         }
 
-        // 3. Aracın Canlı Durumunu Güncelle
-        [HttpPatch("update-status/{recordId}")]
-        public async Task<IActionResult> UpdateStatus(int recordId, [FromBody] ServiceStatus status, [FromQuery] string mechanicNote = "")
-        {
-            var record = await _context.ServiceRecords.FindAsync(recordId);
-            if (record == null) return NotFound("İş emri bulunamadı.");
-
-            record.Status = status;
-            if (!string.IsNullOrEmpty(mechanicNote))
-            {
-                record.MechanicNote = mechanicNote;
-            }
-
-            if (status == ServiceStatus.Ready)
-            {
-                record.ExitDate = DateTime.UtcNow;
-            }
-
-            await _context.SaveChangesAsync();
-            return Ok(new { message = "Durum başarıyla güncellendi.", currentStatus = record.Status });
-        }
-
-        // 4. Servis Kaydına Değişen Parça / İşçilik Ekle
+        // 6. Parça / İşçilik Ekleme
         [HttpPost("add-item/{recordId}")]
-        public async Task<IActionResult> AddServiceItem(int recordId, [FromBody] ServiceItem item)
+        public async Task<IActionResult> AddItem(int recordId, [FromBody] ServiceItem item)
         {
             var record = await _context.ServiceRecords
                 .Include(r => r.ServiceItems)
@@ -87,170 +124,53 @@ namespace mepa_servis.Controllers
 
             if (record == null) return NotFound("Servis kaydı bulunamadı.");
 
-            item.ServiceRecordId = recordId;
-            _context.ServiceItems.Add(item);
-
+            record.ServiceItems.Add(item);
             record.TotalCost += item.Price;
 
             await _context.SaveChangesAsync();
             return Ok(record);
         }
 
-        // 5. Parça Kalemini Sil
+        // 7. Parça Silme
         [HttpDelete("delete-item/{itemId}")]
-        public async Task<IActionResult> DeleteServiceItem(int itemId)
+        public async Task<IActionResult> DeleteItem(int itemId)
         {
             var item = await _context.ServiceItems.FindAsync(itemId);
-            if (item == null) return NotFound("Parça bulunamadı.");
+            if (item == null) return NotFound();
 
             var record = await _context.ServiceRecords.FindAsync(item.ServiceRecordId);
             if (record != null)
             {
                 record.TotalCost -= item.Price;
-                if (record.TotalCost < 0) record.TotalCost = 0;
             }
 
             _context.ServiceItems.Remove(item);
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Parça silindi." });
+            return Ok();
         }
 
-        // 6. Araç ve Servis Kaydını Tamamen Sil
-        [HttpDelete("delete-vehicle/{vehicleId}")]
-        public async Task<IActionResult> DeleteVehicle(int vehicleId)
+        // 8. Araç Silme
+        [HttpDelete("delete-vehicle/{id}")]
+        public async Task<IActionResult> DeleteVehicle(int id)
         {
-            var vehicle = await _context.Vehicles
-                .Include(v => v.ServiceRecords)
-                    .ThenInclude(sr => sr.ServiceItems)
-                .FirstOrDefaultAsync(v => v.Id == vehicleId);
-
-            if (vehicle == null) return NotFound("Araç kaydı bulunamadı.");
+            var vehicle = await _context.Vehicles.FindAsync(id);
+            if (vehicle == null) return NotFound();
 
             _context.Vehicles.Remove(vehicle);
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Araç ve tüm servis geçmişi silindi." });
+            return Ok();
         }
 
-        // 7. Araç ve Müşteri Bilgilerini Düzenle (KM Değiştiğinde Bakımı Mantıklı Katına Yuvarlar)
-        [HttpPut("update-vehicle/{vehicleId}")]
-        public async Task<IActionResult> UpdateVehicle(int vehicleId, [FromBody] Vehicle updatedVehicle)
+        // 9. Durum Güncelleme
+        [HttpPatch("update-status/{recordId}")]
+        public async Task<IActionResult> UpdateStatus(int recordId, [FromBody] int status)
         {
-            var vehicle = await _context.Vehicles
-                .Include(v => v.ServiceRecords)
-                .FirstOrDefaultAsync(v => v.Id == vehicleId);
+            var record = await _context.ServiceRecords.FindAsync(recordId);
+            if (record == null) return NotFound();
 
-            if (vehicle == null) return NotFound("Araç bulunamadı.");
-
-            vehicle.Brand = updatedVehicle.Brand;
-            vehicle.Model = updatedVehicle.Model;
-            vehicle.Year = updatedVehicle.Year;
-            vehicle.CurrentKm = updatedVehicle.CurrentKm;
-            vehicle.OwnerName = updatedVehicle.OwnerName;
-            vehicle.OwnerPhone = updatedVehicle.OwnerPhone;
-
-            // Mantıklı KM Hesabı: 65.000 KM yapıldıysa bir sonraki bakım hedefi 70.000 KM olur
-            int calculatedNextKm = ((updatedVehicle.CurrentKm / 10000) + 1) * 10000;
-
-            var lastRecord = vehicle.ServiceRecords.OrderByDescending(r => r.EntryDate).FirstOrDefault();
-            if (lastRecord != null)
-            {
-                lastRecord.NextMaintenanceKm = calculatedNextKm;
-            }
-
+            record.Status = (ServiceStatus)status;
             await _context.SaveChangesAsync();
-            return Ok(vehicle);
-        }
-
-        // 8. Periyodik Bakım Takip Listesi
-        [HttpGet("upcoming-maintenances")]
-        public async Task<IActionResult> GetUpcomingMaintenances()
-        {
-            var vehicles = await _context.Vehicles
-                .Include(v => v.ServiceRecords)
-                .ToListAsync();
-
-            var upcomingList = new List<object>();
-
-            foreach (var v in vehicles)
-            {
-                var lastRecord = v.ServiceRecords.OrderByDescending(r => r.EntryDate).FirstOrDefault();
-                
-                int nextKm = (lastRecord != null && lastRecord.NextMaintenanceKm > 0) 
-                    ? lastRecord.NextMaintenanceKm 
-                    : (((v.CurrentKm / 10000) + 1) * 10000);
-
-                upcomingList.Add(new {
-                    id = v.Id,
-                    plate = v.Plate,
-                    brand = v.Brand,
-                    model = v.Model,
-                    ownerName = v.OwnerName,
-                    ownerPhone = v.OwnerPhone,
-                    currentKm = v.CurrentKm,
-                    nextKm = nextKm,
-                    lastServiceDate = lastRecord != null ? lastRecord.EntryDate : DateTime.UtcNow
-                });
-            }
-
-            return Ok(upcomingList);
-        }
-
-        // 9. Dükkan Ayarlarını Getir
-        [HttpGet("shop-settings")]
-        public async Task<IActionResult> GetShopSettings()
-        {
-            try
-            {
-                var setting = await _context.ShopSettings.FirstOrDefaultAsync();
-                if (setting == null)
-                {
-                    setting = new ShopSetting { ShopName = "OtoServis Pro", Phone = "", Address = "", Iban = "", LogoUrl = "" };
-                    _context.ShopSettings.Add(setting);
-                    await _context.SaveChangesAsync();
-                }
-                return Ok(setting);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Veritabanı hatası", error = ex.Message });
-            }
-        }
-
-        // 10. Dükkan Ayarlarını Güncelle
-        [HttpPut("shop-settings")]
-        public async Task<IActionResult> UpdateShopSettings([FromBody] ShopSetting updated)
-        {
-            try
-            {
-                var setting = await _context.ShopSettings.FirstOrDefaultAsync();
-                if (setting == null)
-                {
-                    setting = new ShopSetting
-                    {
-                        ShopName = updated.ShopName ?? "OtoServis Pro",
-                        Phone = updated.Phone ?? "",
-                        Address = updated.Address ?? "",
-                        Iban = updated.Iban ?? "",
-                        LogoUrl = updated.LogoUrl ?? ""
-                    };
-                    _context.ShopSettings.Add(setting);
-                }
-                else
-                {
-                    setting.ShopName = string.IsNullOrWhiteSpace(updated.ShopName) ? "OtoServis Pro" : updated.ShopName;
-                    setting.Phone = updated.Phone ?? "";
-                    setting.Address = updated.Address ?? "";
-                    setting.Iban = updated.Iban ?? "";
-                    setting.LogoUrl = updated.LogoUrl ?? "";
-                }
-
-                await _context.SaveChangesAsync();
-                return Ok(setting);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Ayarlar güncellenirken sunucu hatası oluştu.", error = ex.Message });
-            }
+            return Ok(record);
         }
     }
 }

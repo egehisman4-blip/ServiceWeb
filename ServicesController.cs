@@ -16,7 +16,6 @@ namespace mepa_servis.Controllers
             _context = context;
         }
 
-        // 1. Dükkan Ayarları (Getir)
         [HttpGet("shop-settings")]
         public async Task<IActionResult> GetShopSettings()
         {
@@ -28,7 +27,6 @@ namespace mepa_servis.Controllers
             return Ok(setting);
         }
 
-        // 2. Dükkan Ayarları (Güncelle)
         [HttpPut("shop-settings")]
         public async Task<IActionResult> UpdateShopSettings([FromBody] ShopSetting setting)
         {
@@ -50,7 +48,6 @@ namespace mepa_servis.Controllers
             return Ok(setting);
         }
 
-        // 3. Yaklaşan Bakımlar
         [HttpGet("upcoming-maintenances")]
         public async Task<IActionResult> GetUpcomingMaintenances()
         {
@@ -58,7 +55,6 @@ namespace mepa_servis.Controllers
             return Ok(vehicles);
         }
 
-        // 4. Plaka İle Arama
         [HttpGet("search/{plaka}")]
         public async Task<IActionResult> SearchByPlaka(string plaka)
         {
@@ -75,46 +71,69 @@ namespace mepa_servis.Controllers
             return Ok(vehicle);
         }
 
-        // 5. Araç / Servis Kaydı Açma
         [HttpPost("create-vehicle")]
-        public async Task<IActionResult> CreateVehicle([FromBody] Vehicle vehicle)
+        public async Task<IActionResult> CreateVehicle([FromBody] Vehicle input)
         {
-            if (vehicle == null) return BadRequest("Geçersiz veri.");
+            if (input == null) return BadRequest("Geçersiz veri.");
 
             try
             {
-                vehicle.Plate = (vehicle.Plate ?? "").Replace(" ", "").ToUpper();
-
-                var existingVehicle = await _context.Vehicles
+                var cleanPlate = (input.Plate ?? "").Replace(" ", "").ToUpper();
+                var vehicle = await _context.Vehicles
                     .Include(v => v.ServiceRecords)
-                    .FirstOrDefaultAsync(v => v.Plate == vehicle.Plate);
+                    .FirstOrDefaultAsync(v => v.Plate == cleanPlate);
 
-                if (existingVehicle != null)
+                if (vehicle == null)
                 {
-                    existingVehicle.Brand = vehicle.Brand;
-                    existingVehicle.Model = vehicle.Model;
-                    existingVehicle.Year = vehicle.Year;
-                    existingVehicle.CurrentKm = vehicle.CurrentKm;
-                    existingVehicle.OwnerName = vehicle.OwnerName;
-                    existingVehicle.OwnerPhone = vehicle.OwnerPhone;
-
-                    _context.Vehicles.Update(existingVehicle);
+                    vehicle = new Vehicle
+                    {
+                        Plate = cleanPlate,
+                        Brand = input.Brand ?? "",
+                        Model = input.Model ?? "",
+                        Year = input.Year > 0 ? input.Year : 2024,
+                        CurrentKm = input.CurrentKm,
+                        OwnerName = input.OwnerName ?? "",
+                        OwnerPhone = input.OwnerPhone ?? "",
+                        ServiceRecords = new List<ServiceRecord>()
+                    };
+                    _context.Vehicles.Add(vehicle);
                 }
                 else
                 {
-                    _context.Vehicles.Add(vehicle);
+                    vehicle.Brand = input.Brand ?? vehicle.Brand;
+                    vehicle.Model = input.Model ?? vehicle.Model;
+                    vehicle.Year = input.Year > 0 ? input.Year : vehicle.Year;
+                    vehicle.CurrentKm = input.CurrentKm;
+                    vehicle.OwnerName = input.OwnerName ?? vehicle.OwnerName;
+                    vehicle.OwnerPhone = input.OwnerPhone ?? vehicle.OwnerPhone;
                 }
 
+                // Tür dönüşümü (int) ve gelen ilk servis notu kontrolü
+                int nextKm = Convert.ToInt32((Math.Floor((double)input.CurrentKm / 10000) + 1) * 10000);
+                string note = input.ServiceRecords?.FirstOrDefault()?.MechanicNote ?? "Servis kaydı açıldı.";
+
+                var newRecord = new ServiceRecord
+                {
+                    EntryDate = DateTime.Now,
+                    Status = ServiceStatus.Accepted,
+                    TotalCost = 0,
+                    MechanicNote = note,
+                    NextMaintenanceKm = nextKm,
+                    ServiceItems = new List<ServiceItem>()
+                };
+
+                vehicle.ServiceRecords.Add(newRecord);
                 await _context.SaveChangesAsync();
+
                 return Ok(vehicle);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Veritabanı Kayıt Hatası: {ex.Message}");
+                var inner = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return StatusCode(500, $"SQLite Hatası: {inner}");
             }
         }
 
-        // 6. Parça / İşçilik Ekleme
         [HttpPost("add-item/{recordId}")]
         public async Task<IActionResult> AddItem(int recordId, [FromBody] ServiceItem item)
         {
@@ -131,7 +150,6 @@ namespace mepa_servis.Controllers
             return Ok(record);
         }
 
-        // 7. Parça Silme
         [HttpDelete("delete-item/{itemId}")]
         public async Task<IActionResult> DeleteItem(int itemId)
         {
@@ -149,7 +167,6 @@ namespace mepa_servis.Controllers
             return Ok();
         }
 
-        // 8. Araç Silme
         [HttpDelete("delete-vehicle/{id}")]
         public async Task<IActionResult> DeleteVehicle(int id)
         {
@@ -161,7 +178,6 @@ namespace mepa_servis.Controllers
             return Ok();
         }
 
-        // 9. Durum Güncelleme
         [HttpPatch("update-status/{recordId}")]
         public async Task<IActionResult> UpdateStatus(int recordId, [FromBody] int status)
         {

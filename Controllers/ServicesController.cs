@@ -319,5 +319,42 @@ namespace mepa_servis.Controllers
             await _context.SaveChangesAsync();
             return Ok();
         }
+        // --- ARAÇ KABUL & ÇİZİK HARİTASI API UÇLARI --- //
+
+        [HttpGet("damages/{plate}")]
+        public async Task<IActionResult> GetDamagesByPlate(string plate)
+        {
+            var cleanPlate = plate.Replace(" ", "").ToUpper();
+            var list = await _context.DamageRecords
+                .Where(d => d.Plate.Replace(" ", "").ToUpper() == cleanPlate)
+                .OrderByDescending(d => d.Date)
+                .ToListAsync();
+            return Ok(list);
+        }
+
+        [HttpPost("damages")]
+        public async Task<IActionResult> AddDamageRecord([FromBody] DamageRecord damage)
+        {
+            if (string.IsNullOrWhiteSpace(damage.Plate) || string.IsNullOrWhiteSpace(damage.Region))
+                return BadRequest("Plaka ve bölge zorunludur.");
+
+            damage.Plate = damage.Plate.Replace(" ", "").ToUpper();
+            damage.Date = DateTime.Now;
+
+            _context.DamageRecords.Add(damage);
+            await _context.SaveChangesAsync();
+            return Ok(damage);
+        }
+
+        [HttpDelete("damages/{id}")]
+        public async Task<IActionResult> DeleteDamageRecord(int id)
+        {
+            var damage = await _context.DamageRecords.FindAsync(id);
+            if (damage == null) return NotFound();
+
+            _context.DamageRecords.Remove(damage);
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
     }
 }

@@ -436,54 +436,80 @@
         <section id="tab-inspection" class="tab-content hidden space-y-6">
             <div>
                 <h2 class="text-xl font-bold text-white">Araç Kabul & Çizik Haritası</h2>
-                <p class="text-xs text-slate-400">Araç servise girerken kaporta hasarlarını işaretleyin ve müşteri şikayetlerini not alın.</p>
+                <p class="text-xs text-slate-400">Araç servise girerken kaporta hasarlarını işaretleyin ve müşteri şikayetlerini kaydedin.</p>
             </div>
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Hasar Kayıt Formu -->
                 <div class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-6 h-fit">
                     <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-clipboard-check text-blue-500 mr-2"></i>Hasar Kaydı Ekle</h3>
-                    <form onsubmit="dummyAction(event, 'Hasar Kaydı')" class="space-y-4">
+                    <form onsubmit="handleAddDamage(event)" class="space-y-4">
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1">Plaka</label>
-                            <input type="text" placeholder="Örn: 34KEB128" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 uppercase">
+                            <input type="text" id="damagePlate" placeholder="Örn: 34KEB128" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 uppercase font-bold">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1">Hasarlı Bölge</label>
-                            <select class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
-                                <option>Ön Tampon</option>
-                                <option>Sağ Çamurluk</option>
-                                <option>Sol Kapı</option>
-                                <option>Arka Tampon</option>
-                                <option>Tavan</option>
+                            <select id="damageRegion" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                                <option value="Ön Tampon">Ön Tampon</option>
+                                <option value="Arka Tampon">Arka Tampon</option>
+                                <option value="Sol Ön Çamurluk">Sol Ön Çamurluk</option>
+                                <option value="Sağ Ön Çamurluk">Sağ Ön Çamurluk</option>
+                                <option value="Sol Arka Çamurluk">Sol Arka Çamurluk</option>
+                                <option value="Sağ Arka Çamurluk">Sağ Arka Çamurluk</option>
+                                <option value="Sol Ön Kapı">Sol Ön Kapı</option>
+                                <option value="Sağ Ön Kapı">Sağ Ön Kapı</option>
+                                <option value="Sol Arka Kapı">Sol Arka Kapı</option>
+                                <option value="Sağ Arka Kapı">Sağ Arka Kapı</option>
+                                <option value="Motor Kaputu">Motor Kaputu</option>
+                                <option value="Tavan">Tavan</option>
+                                <option value="Bagaj Kapağı">Bagaj Kapağı</option>
                             </select>
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1">Hasar Türü</label>
-                            <select class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
-                                <option>Çizik</option>
-                                <option>Göçük</option>
-                                <option>Boya Atması</option>
-                                <option>Kırık / Çatlak</option>
+                            <select id="damageType" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                                <option value="Çizik">Çizik</option>
+                                <option value="Göçük">Göçük</option>
+                                <option value="Boya Atması">Boya Atması</option>
+                                <option value="Kırık / Çatlak">Kırık / Çatlak</option>
+                                <option value="Ezük">Ezük</option>
                             </select>
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1">Açıklama (Opsiyonel)</label>
-                            <textarea rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500" placeholder="Derin çizik mevcut..."></textarea>
+                            <textarea id="damageDesc" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500" placeholder="Derin çizik mevcut..."></textarea>
                         </div>
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition-all text-sm">Haritaya Ekle</button>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition-all text-sm">Hasarı Kaydet</button>
                     </form>
                 </div>
 
                 <!-- Harita ve Liste -->
                 <div class="lg:col-span-2 space-y-6">
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 relative flex flex-col items-center justify-center min-h-[300px] border-dashed">
-                        <div class="absolute inset-0 flex items-center justify-center opacity-20">
-                            <i class="fa-solid fa-car-side text-[150px] text-slate-500"></i>
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-base font-bold text-white"><i class="fa-solid fa-car-side text-amber-500 mr-2"></i>Araç Hasar Listesi Sorgula</h3>
+                            <div class="flex gap-2">
+                                <input type="text" id="damageSearchPlate" placeholder="Plaka Girin..." class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white uppercase font-bold focus:outline-none focus:border-blue-500">
+                                <button onclick="fetchDamages()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-xs font-semibold">Getir</button>
+                            </div>
                         </div>
-                        <div class="z-10 text-center">
-                            <p class="text-amber-400 font-bold mb-2"><i class="fa-solid fa-code text-xl mr-2"></i>Backend Entegrasyonu Bekleniyor</p>
-                            <p class="text-xs text-slate-400 max-w-xs mx-auto">İlerleyen aşamada burada aracın 2D krokisi yer alacak ve tıklayarak nokta işaretlemesi yapılabilecektir.</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-300">
+                                <thead class="bg-slate-950 text-slate-400 uppercase font-semibold">
+                                    <tr>
+                                        <th class="p-3">Tarih</th>
+                                        <th class="p-3">Plaka</th>
+                                        <th class="p-3">Bölge</th>
+                                        <th class="p-3">Hasar Türü</th>
+                                        <th class="p-3">Açıklama</th>
+                                        <th class="p-3 text-right">İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="damageTableBody" class="divide-y divide-slate-800">
+                                    <tr><td colspan="6" class="p-4 text-center text-slate-500">Plaka girip hasar listesini görüntüleyin.</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -782,11 +808,6 @@
                 fetchAppointments();
             }
         };
-
-        function dummyAction(e, actionName) {
-            e.preventDefault();
-            alert(`${actionName} işlemi arayüzde çalışıyor.`);
-        }
 
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -1595,6 +1616,100 @@
             if (!confirm("Bu randevuyu silmek istediğinize emin misiniz?")) return;
             const res = await fetch(`/api/Services/appointments/${id}`, { method: 'DELETE' });
             if (res.ok) fetchAppointments();
+        }
+
+        // --- ARAÇ KABUL & ÇİZİK HARİTASI JAVASCRIPT KODLARI --- //
+
+        async function fetchDamages() {
+            const plateInput = document.getElementById('damageSearchPlate');
+            const plate = plateInput ? plateInput.value.trim() : '';
+            if (!plate) {
+                alert("Lütfen sorgulamak için bir plaka girin.");
+                return;
+            }
+
+            const cleanPlate = plate.replace(/\s+/g, '').toUpperCase();
+            const tbody = document.getElementById('damageTableBody');
+            tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">Yükleniyor...</td></tr>`;
+
+            try {
+                const res = await fetch(`/api/Services/damages/${encodeURIComponent(cleanPlate)}`);
+                if (res.ok) {
+                    const list = await res.json();
+                    tbody.innerHTML = '';
+
+                    if (list.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">Bu plakaya ait kayıtlı hasar bulunmuyor.</td></tr>`;
+                        return;
+                    }
+
+                    list.forEach(d => {
+                        const dateStr = new Date(d.date).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-800/80 transition-all border-b border-slate-800/50">
+                                <td class="p-3 text-slate-400 text-xs">${dateStr}</td>
+                                <td class="p-3 font-mono font-bold text-blue-400">${d.plate}</td>
+                                <td class="p-3 font-semibold text-white">${d.region}</td>
+                                <td class="p-3"><span class="bg-amber-500/10 text-amber-400 font-bold px-2 py-0.5 rounded text-[11px]">${d.damageType}</span></td>
+                                <td class="p-3 text-slate-300">${d.description || '-'}</td>
+                                <td class="p-3 text-right">
+                                    <button onclick="deleteDamage(${d.id}, '${d.plate}')" class="text-red-400 hover:text-red-300 transition-all">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400">Bağlantı hatası oluştu.</td></tr>`;
+            }
+        }
+
+        async function handleAddDamage(e) {
+            e.preventDefault();
+            const plate = document.getElementById('damagePlate').value.toUpperCase().trim();
+            const region = document.getElementById('damageRegion').value;
+            const damageType = document.getElementById('damageType').value;
+            const description = document.getElementById('damageDesc').value.trim();
+
+            const payload = { plate, region, damageType, description };
+
+            try {
+                const res = await fetch('/api/Services/damages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    alert("Hasar kaydı başarıyla eklendi!");
+                    document.getElementById('damagePlate').value = '';
+                    document.getElementById('damageDesc').value = '';
+                    
+                    const searchPlate = document.getElementById('damageSearchPlate');
+                    if(searchPlate && searchPlate.value.toUpperCase().trim() === plate) {
+                        fetchDamages();
+                    }
+                } else {
+                    alert("Hasar kaydedilemedi.");
+                }
+            } catch (err) {
+                alert("Bağlantı hatası.");
+            }
+        }
+
+        async function deleteDamage(id, plate) {
+            if (!confirm("Bu hasar kaydını silmek istediğinize emin misiniz?")) return;
+            try {
+                const res = await fetch(`/api/Services/damages/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    document.getElementById('damageSearchPlate').value = plate;
+                    fetchDamages();
+                }
+            } catch (err) {
+                alert("Silme başarısız.");
+            }
         }
 
     </script>

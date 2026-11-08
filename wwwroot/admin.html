@@ -338,7 +338,7 @@
     <script>
         const ADMIN_PASS = "1234";
         // CANLI SUNUCU ADRESİ
-        const baseUrl = "https://serviceweb-twt6.onrender.com";
+        const baseUrl = window.location.origin;
         let shopData = { shopName: "OtoServis Pro", phone: "", address: "", iban: "", logoUrl: "" };
 
         window.onload = function() {
@@ -378,8 +378,9 @@
                 const res = await fetch('/api/Services/shop-settings');
                 if (res.ok) {
                     shopData = await res.json();
-                    document.getElementById('headerShopTitle').innerText = `${shopData.shopName || shopData.ShopName || 'OtoServis Pro'} - Usta Paneli`;
-                    document.getElementById('cfgShopName').value = shopData.shopName || shopData.ShopName || '';
+                    const sName = shopData.shopName || shopData.ShopName || 'OtoServis Pro';
+                    document.getElementById('headerShopTitle').innerText = `${sName} - Usta Paneli`;
+                    document.getElementById('cfgShopName').value = sName;
                     document.getElementById('cfgPhone').value = shopData.phone || shopData.Phone || '';
                     document.getElementById('cfgIban').value = shopData.iban || shopData.Iban || '';
                     document.getElementById('cfgAddress').value = shopData.address || shopData.Address || '';
@@ -442,13 +443,13 @@
                         return;
                     }
                     list.forEach(v => {
-                        const plate = v.plate || v.Plate;
-                        const brand = v.brand || v.Brand;
+                        const plate = v.plate || v.Plate || v.plaka || v.Plaka;
+                        const brand = v.brand || v.Brand || v.marka || v.Marka;
                         const model = v.model || v.Model;
-                        const ownerName = v.ownerName || v.OwnerName;
-                        const ownerPhone = v.ownerPhone || v.OwnerPhone;
-                        const currentKm = v.currentKm !== undefined ? v.currentKm : v.CurrentKm;
-                        const nextKm = v.nextKm !== undefined ? v.nextKm : v.NextKm;
+                        const ownerName = v.ownerName || v.OwnerName || v.musteriAdSoyad || v.MusteriAdSoyad;
+                        const ownerPhone = v.ownerPhone || v.OwnerPhone || v.musteriTelefon || v.MusteriTelefon;
+                        const currentKm = v.currentKm !== undefined ? v.currentKm : (v.mevcutKm !== undefined ? v.mevcutKm : v.CurrentKm);
+                        const nextKm = v.nextKm !== undefined ? v.nextKm : (v.hedefKm !== undefined ? v.hedefKm : v.NextKm);
 
                         tbody.innerHTML += `
                             <tr class="hover:bg-slate-800/80 transition-all">
@@ -456,7 +457,7 @@
                                 <td class="p-3 font-semibold text-white">${brand} ${model}</td>
                                 <td class="p-3">${ownerName} (${ownerPhone})</td>
                                 <td class="p-3 font-mono">${currentKm} KM</td>
-                                <td class="p-3 font-mono text-amber-400 font-bold">${nextKm} KM</td>
+                                <td class="p-3 font-mono text-amber-400 font-bold">${nextKm || (currentKm + 10000)} KM</td>
                                 <td class="p-3 text-right">
                                     <button onclick="sendMaintenanceReminder('${ownerName}', '${ownerPhone}', '${plate}', '${brand}', '${model}', ${currentKm})"
                                         class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition-all flex items-center space-x-1 ml-auto">
@@ -468,7 +469,7 @@
                         `;
                     });
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400">Veriler alınamadı.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400">Veriler alırken sunucu hatası oluştu.</td></tr>`;
                 }
             } catch (err) {
                 tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400">Bağlantı hatası.</td></tr>`;
@@ -490,38 +491,55 @@
             window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`, '_blank');
         }
 
+        // HATA ÇÖZÜCÜ EKLENMİŞ ARAÇ GİRİŞ KAYDI (Backend Pascal/camel Uyumlu)
         async function handleCreateVehicle(e) {
             e.preventDefault();
+            const currKm = parseInt(document.getElementById('currentKm').value) || 0;
+            const rawPlate = document.getElementById('plate').value.trim().toUpperCase();
+
+            // Hem PascalCase hem camelCase uyarlandı (C# backend çakışmalarını sıfırlar)
             const payload = {
-                plate: document.getElementById('plate').value.trim(),
+                plate: rawPlate,
+                plaka: rawPlate,
                 brand: document.getElementById('brand').value.trim(),
+                marka: document.getElementById('brand').value.trim(),
                 model: document.getElementById('model').value.trim(),
-                year: parseInt(document.getElementById('year').value),
-                currentKm: parseInt(document.getElementById('currentKm').value),
+                year: parseInt(document.getElementById('year').value) || 2024,
+                yil: parseInt(document.getElementById('year').value) || 2024,
+                currentKm: currKm,
+                mevcutKm: currKm,
                 ownerName: document.getElementById('ownerName').value.trim(),
+                musteriAdSoyad: document.getElementById('ownerName').value.trim(),
                 ownerPhone: document.getElementById('ownerPhone').value.trim(),
+                musteriTelefon: document.getElementById('ownerPhone').value.trim(),
+                ustaNotu: document.getElementById('mechanicNote').value.trim(),
                 serviceRecords: [
                     {
                         status: 1,
                         totalCost: 0,
                         mechanicNote: document.getElementById('mechanicNote').value.trim(),
-                        nextMaintenanceKm: (Math.floor(parseInt(document.getElementById('currentKm').value) / 10000) + 1) * 10000
+                        nextMaintenanceKm: (Math.floor(currKm / 10000) + 1) * 10000
                     }
                 ]
             };
 
-            const res = await fetch('/api/Services/create-vehicle', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            try {
+                const res = await fetch('/api/Services/create-vehicle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
 
-            if (res.ok) {
-                alert('Araç ve Servis Kaydı Başarıyla Açıldı!');
-                document.getElementById('createVehicleForm').reset();
-                fetchUpcomingMaintenances();
-            } else {
-                alert('Kayıt oluşturulurken hata oluştu.');
+                if (res.ok) {
+                    alert('Araç ve Servis Kaydı Başarıyla Açıldı!');
+                    document.getElementById('createVehicleForm').reset();
+                    fetchUpcomingMaintenances();
+                } else {
+                    const errText = await res.text();
+                    alert('Kayıt oluşturulurken hata oluştu: ' + errText);
+                }
+            } catch (err) {
+                alert('Bağlantı hatası: ' + err.message);
             }
         }
 
@@ -540,9 +558,15 @@
 
         function renderAdminView() {
             if (!currentVehicleData) return;
-            document.getElementById('admPlate').innerText = currentVehicleData.plate || currentVehicleData.Plate;
-            document.getElementById('admCar').innerText = `${currentVehicleData.brand || currentVehicleData.Brand} ${currentVehicleData.model || currentVehicleData.Model}`;
-            document.getElementById('admOwner').innerText = `${currentVehicleData.ownerName || currentVehicleData.OwnerName} (${currentVehicleData.ownerPhone || currentVehicleData.OwnerPhone})`;
+            const plate = currentVehicleData.plate || currentVehicleData.Plate || currentVehicleData.plaka || currentVehicleData.Plaka;
+            const brand = currentVehicleData.brand || currentVehicleData.Brand || currentVehicleData.marka || currentVehicleData.Marka;
+            const model = currentVehicleData.model || currentVehicleData.Model;
+            const ownerName = currentVehicleData.ownerName || currentVehicleData.OwnerName || currentVehicleData.musteriAdSoyad || currentVehicleData.MusteriAdSoyad;
+            const ownerPhone = currentVehicleData.ownerPhone || currentVehicleData.OwnerPhone || currentVehicleData.musteriTelefon || currentVehicleData.MusteriTelefon;
+
+            document.getElementById('admPlate').innerText = plate;
+            document.getElementById('admCar').innerText = `${brand} ${model}`;
+            document.getElementById('admOwner').innerText = `${ownerName} (${ownerPhone})`;
 
             const records = currentVehicleData.serviceRecords || currentVehicleData.ServiceRecords || [];
 
@@ -588,7 +612,7 @@
                 `;
 
                 [...records].reverse().forEach(rec => {
-                    const entryDate = new Date(rec.entryDate || rec.EntryDate).toLocaleDateString('tr-TR');
+                    const entryDate = new Date(rec.entryDate || rec.EntryDate || Date.now()).toLocaleDateString('tr-TR');
                     const recItems = rec.serviceItems || rec.ServiceItems || [];
                     const itemsText = recItems.length > 0 
                         ? recItems.map(i => `${i.description || i.Description} (${i.price !== undefined ? i.price : i.Price}₺)`).join(', ') 
@@ -600,7 +624,7 @@
                                 <span class="text-blue-400"><i class="fa-regular fa-calendar-check mr-1"></i>${entryDate}</span>
                                 <span class="text-emerald-400 font-mono">${rec.totalCost || rec.TotalCost || 0} ₺</span>
                             </div>
-                            <div class="text-slate-300"><strong>Usta Notu:</strong> ${rec.mechanicNote || rec.MechanicNote || 'Not yok.'}</div>
+                            <div class="text-slate-300"><strong>Usta Notu:</strong> ${rec.mechanicNote || rec.MechanicNote || rec.ustaNotu || 'Not yok.'}</div>
                             <div class="text-slate-400 text-[11px]"><strong>Yapılanlar:</strong> ${itemsText}</div>
                         </div>
                     `;
@@ -653,7 +677,7 @@
         async function deleteCurrentVehicle() {
             if (!currentVehicleData) return;
             const vId = currentVehicleData.id || currentVehicleData.Id;
-            const plate = currentVehicleData.plate || currentVehicleData.Plate;
+            const plate = currentVehicleData.plate || currentVehicleData.Plate || currentVehicleData.plaka || currentVehicleData.Plaka;
 
             if (!confirm(`${plate} plakalı aracı ve tüm servis geçmişini SİLMEK istediğinize emin misiniz?`)) return;
 
@@ -690,11 +714,11 @@
             const statusVal = document.getElementById('admStatusSelect').value;
             const statusText = statusTextMap[statusVal] || "Güncellendi";
             
-            const plate = currentVehicleData.plate || currentVehicleData.Plate;
-            const brand = currentVehicleData.brand || currentVehicleData.Brand;
+            const plate = currentVehicleData.plate || currentVehicleData.Plate || currentVehicleData.plaka || currentVehicleData.Plaka;
+            const brand = currentVehicleData.brand || currentVehicleData.Brand || currentVehicleData.marka || currentVehicleData.Marka;
             const model = currentVehicleData.model || currentVehicleData.Model;
-            const ownerName = currentVehicleData.ownerName || currentVehicleData.OwnerName;
-            const ownerPhone = currentVehicleData.ownerPhone || currentVehicleData.OwnerPhone;
+            const ownerName = currentVehicleData.ownerName || currentVehicleData.OwnerName || currentVehicleData.musteriAdSoyad || currentVehicleData.MusteriAdSoyad;
+            const ownerPhone = currentVehicleData.ownerPhone || currentVehicleData.OwnerPhone || currentVehicleData.musteriTelefon || currentVehicleData.MusteriTelefon;
 
             let phone = ownerPhone.replace(/\D/g, '');
             if (phone.startsWith('0')) phone = '90' + phone.substring(1);
@@ -717,12 +741,12 @@
             const activeAddress = shopData.address || shopData.Address || "Teknik Servis & Bakım İş Emri Formu";
             const activeIban = shopData.iban || shopData.Iban || "";
 
-            const plate = currentVehicleData.plate || currentVehicleData.Plate;
-            const brand = currentVehicleData.brand || currentVehicleData.Brand;
+            const plate = currentVehicleData.plate || currentVehicleData.Plate || currentVehicleData.plaka || currentVehicleData.Plaka;
+            const brand = currentVehicleData.brand || currentVehicleData.Brand || currentVehicleData.marka || currentVehicleData.Marka;
             const model = currentVehicleData.model || currentVehicleData.Model;
-            const year = currentVehicleData.year || currentVehicleData.Year;
-            const ownerName = currentVehicleData.ownerName || currentVehicleData.OwnerName;
-            const ownerPhone = currentVehicleData.ownerPhone || currentVehicleData.OwnerPhone;
+            const year = currentVehicleData.year || currentVehicleData.Year || currentVehicleData.yil || currentVehicleData.Yil;
+            const ownerName = currentVehicleData.ownerName || currentVehicleData.OwnerName || currentVehicleData.musteriAdSoyad || currentVehicleData.MusteriAdSoyad;
+            const ownerPhone = currentVehicleData.ownerPhone || currentVehicleData.OwnerPhone || currentVehicleData.musteriTelefon || currentVehicleData.MusteriTelefon;
 
             document.getElementById('pdfShopTitle').innerText = activeShopName.toUpperCase();
             document.getElementById('pdfShopAddress').innerText = activeAddress;
@@ -734,7 +758,7 @@
             document.getElementById('pdfCar').innerText = `${brand} ${model} (${year})`;
             document.getElementById('pdfOwner').innerText = ownerName;
             document.getElementById('pdfPhone').innerText = ownerPhone;
-            document.getElementById('pdfNote').innerText = lastRec.mechanicNote || lastRec.MechanicNote || "İşlem detayı belirtilmedi.";
+            document.getElementById('pdfNote').innerText = lastRec.mechanicNote || lastRec.MechanicNote || lastRec.ustaNotu || "İşlem detayı belirtilmedi.";
             document.getElementById('pdfTotalCost').innerText = `Toplam: ${lastRec.totalCost || lastRec.TotalCost || 0} ₺`;
 
             const pdfItemsDiv = document.getElementById('pdfItemsList');

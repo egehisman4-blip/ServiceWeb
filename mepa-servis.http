@@ -1,0 +1,7 @@
+@token = senin_token_degerin
+@mepa_servis_HostAddress = http://localhost:5082
+
+### Dükkan Getir
+GET {{mepa_servis_HostAddress}}/weatherforecast/
+Accept: application/json
+Authorization: Bearer {{token}}

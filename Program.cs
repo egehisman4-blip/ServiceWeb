@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using mepa_servis.Data;
 
 var builder = WebApplication.CreateBuilder(args);

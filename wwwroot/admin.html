@@ -165,10 +165,26 @@
 
         <!-- TAB 1: GENEL BAKIŞ -->
         <section id="tab-dashboard" class="tab-content space-y-6">
-            <div class="flex justify-between items-center">
+            <div class="flex justify-between items-center mb-2">
                 <div>
                     <h2 class="text-xl font-bold text-white">Genel Bakış</h2>
-                    <p class="text-xs text-slate-400">Dükkandaki canlı durum ve bakım zamanı gelen araçlar.</p>
+                    <p class="text-xs text-slate-400">Dükkandaki canlı durum, günlük ciro ve bakım zamanı gelen araçlar.</p>
+                </div>
+            </div>
+
+            <!-- YENİ EKLENEN: GÜNLÜK HIZLI ÖZET KARTLARI -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div class="bg-slate-900 border border-emerald-500/30 p-5 rounded-2xl flex flex-col justify-center">
+                    <div class="text-xs text-emerald-400 font-bold uppercase mb-1 flex items-center"><i class="fa-solid fa-coins mr-2"></i>Bugünkü Ciro</div>
+                    <div class="text-2xl font-black text-white" id="dashTodayIncome">0.00 ₺</div>
+                </div>
+                <div class="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl flex flex-col justify-center">
+                    <div class="text-xs text-amber-400 font-bold uppercase mb-1 flex items-center"><i class="fa-solid fa-car-side mr-2"></i>Bugünkü Gider</div>
+                    <div class="text-2xl font-black text-white" id="dashTodayExpense">0.00 ₺</div>
+                </div>
+                <div class="bg-slate-900 border border-blue-500/30 p-5 rounded-2xl flex flex-col justify-center">
+                    <div class="text-xs text-blue-400 font-bold uppercase mb-1 flex items-center"><i class="fa-solid fa-calendar-check mr-2"></i>Sistemdeki Toplam Araç</div>
+                    <div class="text-2xl font-black text-white" id="dashTotalVehicles">0</div>
                 </div>
             </div>
 
@@ -613,18 +629,30 @@
                 <p class="text-xs text-slate-400">Dükkanın genel muhasebesi, günlük ciro ve nakit akışını izleyin.</p>
             </div>
 
+            <!-- GÜNLÜK FİNANS ÖZETİ EKLENDİ -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-b border-slate-800 pb-6">
+                <div class="bg-slate-900 border border-emerald-500/50 p-5 rounded-2xl">
+                    <div class="text-xs text-emerald-400 font-bold uppercase mb-1 flex items-center"><i class="fa-solid fa-calendar-day mr-2"></i>Sadece Bugünkü Ciro (GELİR)</div>
+                    <div class="text-3xl font-black text-white" id="finTodayIncome">0.00 ₺</div>
+                </div>
+                <div class="bg-slate-900 border border-amber-500/50 p-5 rounded-2xl">
+                    <div class="text-xs text-amber-400 font-bold uppercase mb-1 flex items-center"><i class="fa-solid fa-calendar-day mr-2"></i>Sadece Bugünkü Gider</div>
+                    <div class="text-3xl font-black text-white" id="finTodayExpense">0.00 ₺</div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="bg-slate-900 border border-emerald-500/30 p-5 rounded-2xl">
-                    <div class="text-xs text-emerald-400 font-bold uppercase mb-1">Toplam Kasa (Net)</div>
-                    <div class="text-2xl font-black text-white">0.00 ₺</div>
+                <div class="bg-slate-900 border border-emerald-500/30 p-5 rounded-2xl opacity-80">
+                    <div class="text-xs text-emerald-400 font-bold uppercase mb-1">Tüm Zamanlar Net Kasa</div>
+                    <div class="text-2xl font-black text-white" id="finTotalNet">0.00 ₺</div>
                 </div>
-                <div class="bg-slate-900 border border-blue-500/30 p-5 rounded-2xl">
-                    <div class="text-xs text-blue-400 font-bold uppercase mb-1">Aylık Toplam Gelir</div>
-                    <div class="text-2xl font-black text-white">0.00 ₺</div>
+                <div class="bg-slate-900 border border-blue-500/30 p-5 rounded-2xl opacity-80">
+                    <div class="text-xs text-blue-400 font-bold uppercase mb-1">Tüm Zamanlar Gelir</div>
+                    <div class="text-2xl font-black text-white" id="finTotalIncome">0.00 ₺</div>
                 </div>
-                <div class="bg-slate-900 border border-red-500/30 p-5 rounded-2xl">
-                    <div class="text-xs text-red-400 font-bold uppercase mb-1">Aylık Toplam Gider</div>
-                    <div class="text-2xl font-black text-white">0.00 ₺</div>
+                <div class="bg-slate-900 border border-red-500/30 p-5 rounded-2xl opacity-80">
+                    <div class="text-xs text-red-400 font-bold uppercase mb-1">Tüm Zamanlar Gider</div>
+                    <div class="text-2xl font-black text-white" id="finTotalExpense">0.00 ₺</div>
                 </div>
             </div>
 
@@ -658,10 +686,10 @@
 
                 <!-- Finans Tablosu -->
                 <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
-                    <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-list text-blue-500 mr-2"></i>Son İşlemler Dökümü</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs text-slate-300">
-                            <thead class="bg-slate-950 text-slate-400 uppercase font-semibold">
+                    <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-list text-blue-500 mr-2"></i>Son İşlemler Dökümü <span class="text-xs text-slate-500 ml-2 font-normal">(Bugünküler <span class="bg-blue-600 px-1.5 py-0.5 rounded text-white text-[10px] ml-1">BUGÜN</span> ile işaretlenir)</span></h3>
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="w-full text-left text-xs text-slate-300 relative">
+                            <thead class="bg-slate-950 text-slate-400 uppercase font-semibold sticky top-0">
                                 <tr>
                                     <th class="p-3">Tarih</th>
                                     <th class="p-3">Açıklama</th>
@@ -669,7 +697,7 @@
                                     <th class="p-3 text-right">Tutar</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-800">
+                            <tbody class="divide-y divide-slate-800" id="financeTableBody">
                                 <tr><td colspan="4" class="p-4 text-center text-slate-500">Yükleniyor...</td></tr>
                             </tbody>
                         </table>
@@ -798,14 +826,13 @@
         window.onload = function() {
             if (sessionStorage.getItem("shopAuth") === "true" && currentShopId) {
                 document.getElementById("loginOverlay").classList.add("hidden");
-                // Müşteri ekranı butonunu bu dükkana özel yapalım
                 document.getElementById("customerScreenLink").href = `/index.html?shopId=${currentShopId}`;
                 
                 loadShopSettings();
                 fetchUpcomingMaintenances();
                 loadCustomers();
                 fetchStockItems();
-                fetchFinanceRecords();
+                fetchFinanceRecords(); // Günlük özeti de hesaplayacak
                 fetchAppointments();
             }
         };
@@ -828,6 +855,7 @@
             if (tabName === 'stock') fetchStockItems();
             if (tabName === 'finance') fetchFinanceRecords();
             if (tabName === 'appointments') fetchAppointments();
+            if (tabName === 'dashboard') { fetchFinanceRecords(); fetchUpcomingMaintenances(); }
         }
 
         async function handleLogin(e) {
@@ -849,7 +877,6 @@
                     currentShopId = data.shopId;
 
                     document.getElementById("loginOverlay").classList.add("hidden");
-                    // Müşteri ekranı butonunu bu dükkana özel yapalım
                     document.getElementById("customerScreenLink").href = `/index.html?shopId=${currentShopId}`;
 
                     loadShopSettings();
@@ -947,6 +974,8 @@
                 if (res.ok) {
                     const list = await res.json();
                     tbody.innerHTML = '';
+                    document.getElementById('dashTotalVehicles').innerText = list.length; // DASHBOARD ARAÇ SAYISI GÜNCELLEMESİ
+                    
                     if (list.length === 0) {
                         tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-500">Kayıtlı araç bulunmuyor.</td></tr>`;
                         return;
@@ -1249,6 +1278,12 @@
                 document.getElementById('itemDesc').value = '';
                 document.getElementById('itemPrice').value = '';
                 await fetchAdminVehicle();
+                
+                // Ciroya otomatik gelir eklemek istersen, aşağıdaki satırı aktif edebilirsin
+                // const payload = { shopId: parseInt(currentShopId), description: `${document.getElementById('admPlate').innerText} - ${desc}`, type: 'Gelir', amount: price };
+                // await fetch('/api/Services/finance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                // fetchFinanceRecords();
+                
             } else {
                 alert('Parça eklenemedi.');
             }
@@ -1483,30 +1518,42 @@
         }
 
         function renderFinanceView(records) {
-            const tbody = document.querySelector('#tab-finance tbody');
+            const tbody = document.getElementById('financeTableBody');
             tbody.innerHTML = '';
 
             let totalIncome = 0;
             let totalExpense = 0;
+            let todayIncome = 0;
+            let todayExpense = 0;
+            
+            const todayStr = new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
             if (records.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">Henüz finansal işlem bulunmuyor.</td></tr>`;
             } else {
                 records.forEach(r => {
                     const isIncome = (r.type === 'Gelir' || r.type === 'income');
-                    if (isIncome) totalIncome += r.amount;
-                    else totalExpense += r.amount;
-
                     const dateStr = new Date(r.date || Date.now()).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    const isToday = (dateStr === todayStr);
+
+                    if (isIncome) {
+                        totalIncome += r.amount;
+                        if(isToday) todayIncome += r.amount;
+                    } else {
+                        totalExpense += r.amount;
+                        if(isToday) todayExpense += r.amount;
+                    }
+
                     const typeBadge = isIncome 
                         ? `<span class="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded">Gelir</span>` 
                         : `<span class="text-red-400 font-bold bg-red-500/10 px-2 py-0.5 rounded">Gider</span>`;
                     
                     const amountClass = isIncome ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold';
+                    const todayBadge = isToday ? `<span class="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[10px] ml-2">BUGÜN</span>` : '';
 
                     tbody.innerHTML += `
-                        <tr class="hover:bg-slate-800/80 transition-all border-b border-slate-800/50">
-                            <td class="p-3 text-slate-400 text-xs">${dateStr}</td>
+                        <tr class="hover:bg-slate-800/80 transition-all border-b border-slate-800/50 ${isToday ? 'bg-blue-900/10' : ''}">
+                            <td class="p-3 text-slate-400 text-xs">${dateStr} ${todayBadge}</td>
                             <td class="p-3 font-semibold text-white">${r.description}</td>
                             <td class="p-3">${typeBadge}</td>
                             <td class="p-3 text-right font-mono ${amountClass}">${isIncome ? '+' : '-'}${r.amount.toLocaleString('tr-TR')} ₺</td>
@@ -1515,14 +1562,20 @@
                 });
             }
 
-            const netKas = totalIncome - totalExpense;
-            const cards = document.querySelectorAll('#tab-finance .text-2xl.font-black.text-white');
-            if (cards.length >= 3) {
-                cards[0].innerText = `${netKas.toLocaleString('tr-TR')} ₺`;
-                cards[0].className = `text-2xl font-black ${netKas >= 0 ? 'text-emerald-400' : 'text-red-400'}`;
-                cards[1].innerText = `${totalIncome.toLocaleString('tr-TR')} ₺`;
-                cards[2].innerText = `${totalExpense.toLocaleString('tr-TR')} ₺`;
-            }
+            // GÜNLÜK VE TOPLAM DEĞERLERİ YAZDIRMA
+            document.getElementById('finTotalNet').innerText = `${(totalIncome - totalExpense).toLocaleString('tr-TR')} ₺`;
+            document.getElementById('finTotalNet').className = `text-2xl font-black ${(totalIncome - totalExpense) >= 0 ? 'text-emerald-400' : 'text-red-400'}`;
+            document.getElementById('finTotalIncome').innerText = `${totalIncome.toLocaleString('tr-TR')} ₺`;
+            document.getElementById('finTotalExpense').innerText = `${totalExpense.toLocaleString('tr-TR')} ₺`;
+            
+            document.getElementById('finTodayIncome').innerText = `${todayIncome.toLocaleString('tr-TR')} ₺`;
+            document.getElementById('finTodayExpense').innerText = `${todayExpense.toLocaleString('tr-TR')} ₺`;
+            
+            // DASHBOARD'DAKİ GÜNLÜK DEĞERLERİ YAZDIRMA
+            const dashTodayInc = document.getElementById('dashTodayIncome');
+            const dashTodayExp = document.getElementById('dashTodayExpense');
+            if (dashTodayInc) dashTodayInc.innerText = `${todayIncome.toLocaleString('tr-TR')} ₺`;
+            if (dashTodayExp) dashTodayExp.innerText = `${todayExpense.toLocaleString('tr-TR')} ₺`;
         }
 
         async function handleAddFinance(e) {

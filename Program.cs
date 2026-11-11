@@ -12,29 +12,25 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 2. Veritabanı Konfigürasyonu (Uygulama Klasörüne Sabitlendi)
-// Bu sayede veritabanı her zaman uygulamanın olduğu yerde (mepa.db) kalır, asla uçmaz veya sıfırlanmaz.
-var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mepa.db");
-
+// 2. PostgreSQL (Neon.tech) Veritabanı Konfigürasyonu
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite($"Data Source={dbPath}"));
-
+    options.UseNpgsql("Host=ep-young-hall-bajhbrym-pooler.c-8.eu-central-1.aws.neon.tech;Database=neondb;Username=neondb_owner;Password=npg_HjeSdJR6u1lB;Ssl Mode=Require;Pooling=true"));
 // 3. CORS Politikası
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
         policy => policy.AllowAnyOrigin()
-                        .AllowAnyMethod()
-                        .AllowAnyHeader());
+                    .AllowAnyMethod()
+                    .AllowAnyHeader());
 });
 
 var app = builder.Build();
 
-// 4. Veritabanı ve Tabloları Otomatik Oluştur
+// 4. Bulut Veritabanı Otomatik Migrate (Tabloları Oluşturma / Güncelleme)
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.EnsureCreated();
+    dbContext.Database.Migrate();
 }
 
 // 5. Middleware Konfigürasyonu

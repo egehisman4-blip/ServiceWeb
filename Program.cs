@@ -12,10 +12,9 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 2. Veritabanı Konfigürasyonu
-var folder = Environment.SpecialFolder.LocalApplicationData;
-var path = Environment.GetFolderPath(folder);
-var dbPath = System.IO.Path.Join(path, "mepa.db");
+// 2. Veritabanı Konfigürasyonu (Uygulama Klasörüne Sabitlendi)
+// Bu sayede veritabanı her zaman uygulamanın olduğu yerde (mepa.db) kalır, asla uçmaz veya sıfırlanmaz.
+var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mepa.db");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));

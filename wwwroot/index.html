@@ -118,10 +118,13 @@
 
         let currentVehicleData = null;
 
+        // URL'den veya depolamadan dükkan ID'sini yakala
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentShopId = urlParams.get('shopId') || sessionStorage.getItem('shopId') || "1";
+
         window.onload = function() {
             loadShopInfo();
             
-            const urlParams = new URLSearchParams(window.location.search);
             const plateParam = urlParams.get('plate');
             if (plateParam) {
                 document.getElementById('searchPlate').value = plateParam;
@@ -131,7 +134,7 @@
 
         async function loadShopInfo() {
             try {
-                const res = await fetch('/api/Services/shop-settings');
+                const res = await fetch(`/api/Services/shop-settings?shopId=${currentShopId}`);
                 if (res.ok) {
                     const shop = await res.json();
                     const shopName = shop.shopName || shop.ShopName || "OtoServis Pro";
@@ -160,7 +163,7 @@
             document.getElementById('errorBox').classList.add('hidden');
 
             try {
-                const res = await fetch(`/api/Services/search/${encodeURIComponent(plate)}`);
+                const res = await fetch(`/api/Services/search/${encodeURIComponent(plate)}?shopId=${currentShopId}`);
                 document.getElementById('loading').classList.add('hidden');
 
                 if (res.ok) {

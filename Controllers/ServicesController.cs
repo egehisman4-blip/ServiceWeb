@@ -96,14 +96,16 @@ namespace mepa_servis.Controllers
             vehicle.CurrentKm = vehicle.CurrentKm > 0 ? vehicle.CurrentKm : 0;
             vehicle.LastKmUpdateDate = DateTime.Now;
 
-            // Plaka bu dükkanda zaten var mı kontrol et (Duplicate key hatasını önler)
+            // Sadece plakaya göre kontrol et (Mükerrer kaydı ve hata patlamasını önler)
             var existingVehicle = await _context.Vehicles
                 .Include(v => v.ServiceRecords)
-                .FirstOrDefaultAsync(v => v.Plate == vehicle.Plate && v.ShopId == vehicle.ShopId);
+                .FirstOrDefaultAsync(v => v.Plate == vehicle.Plate);
 
             if (existingVehicle != null)
             {
-                // Araç zaten varsa yeni bir servis kaydı ekle
+                // Araç zaten varsa dükkanını güncelle ve yeni servis kaydı aç
+                existingVehicle.ShopId = vehicle.ShopId;
+                
                 var newRecord = new ServiceRecord
                 {
                     EntryDate = DateTime.Now,

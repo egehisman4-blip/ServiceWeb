@@ -142,18 +142,21 @@ namespace mepa_servis.Controllers
         public async Task<IActionResult> SearchVehicle(string plate, [FromQuery] int shopId)
         {
             var cleanPlate = plate.Trim().ToUpper();
+            
+            // ShopId filtresini kaldırarak sadece plakaya göre arama yapıyoruz
             var vehicle = await _context.Vehicles
                 .Include(v => v.ServiceRecords)
-                    .ThenInclude(sr => sr.ServiceItems.Where(si => !si.IsDeleted)) // Silinen parçaları listeden gizle ama sakla
-                .FirstOrDefaultAsync(v => v.Plate.ToUpper() == cleanPlate && v.ShopId == shopId);
+                    .ThenInclude(sr => sr.ServiceItems.Where(si => !si.IsDeleted))
+                .FirstOrDefaultAsync(v => v.Plate.ToUpper() == cleanPlate);
 
             if (vehicle == null)
             {
-                return NotFound(new { message = "Bu plaka bu dükkanda bulunamadı." });
+                return NotFound(new { message = "Bu plaka sistemde bulunamadı." });
             }
 
             return Ok(vehicle);
         }
+        
 
         [HttpGet("upcoming-maintenances")]
         public async Task<IActionResult> GetUpcomingMaintenances([FromQuery] int shopId)

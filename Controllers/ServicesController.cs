@@ -96,6 +96,30 @@ namespace mepa_servis.Controllers
             vehicle.CurrentKm = vehicle.CurrentKm > 0 ? vehicle.CurrentKm : 0;
             vehicle.LastKmUpdateDate = DateTime.Now;
 
+            // Plaka bu dükkanda zaten var mı kontrol et (Duplicate key hatasını önler)
+            var existingVehicle = await _context.Vehicles
+                .Include(v => v.ServiceRecords)
+                .FirstOrDefaultAsync(v => v.Plate == vehicle.Plate && v.ShopId == vehicle.ShopId);
+
+            if (existingVehicle != null)
+            {
+                // Araç zaten varsa yeni bir servis kaydı ekle
+                var newRecord = new ServiceRecord
+                {
+                    EntryDate = DateTime.Now,
+                    MechanicNote = "Araç tekrar kabul edildi.",
+                    Status = (ServiceStatus)1
+                };
+
+                existingVehicle.ServiceRecords ??= new List<ServiceRecord>();
+                existingVehicle.ServiceRecords.Add(newRecord);
+                existingVehicle.CurrentKm = vehicle.CurrentKm > 0 ? vehicle.CurrentKm : existingVehicle.CurrentKm;
+                existingVehicle.LastKmUpdateDate = DateTime.Now;
+
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Mevcut araca yeni servis kaydı açıldı.", vehicleId = existingVehicle.Id });
+            }
+
             // İlk servis kaydını otomatik aç
             var initialRecord = new ServiceRecord
             {
@@ -118,7 +142,7 @@ namespace mepa_servis.Controllers
             var cleanPlate = plate.Trim().ToUpper();
             var vehicle = await _context.Vehicles
                 .Include(v => v.ServiceRecords)
-                    .ThenInclude(sr => sr.ServiceItems)
+                    .ThenInclude(sr => sr.ServiceItems.Where(si => !si.IsDeleted)) // Silinen parçaları listeden gizle ama sakla
                 .FirstOrDefaultAsync(v => v.Plate.ToUpper() == cleanPlate && v.ShopId == shopId);
 
             if (vehicle == null)
@@ -135,6 +159,7 @@ namespace mepa_servis.Controllers
             var list = await _context.Vehicles
                 .Where(v => v.ShopId == shopId)
                 .Include(v => v.ServiceRecords)
+                    .ThenInclude(sr => sr.ServiceItems.Where(si => !si.IsDeleted)) // Silinen parçaları filtrele
                 .OrderByDescending(v => v.Id)
                 .ToListAsync();
 
@@ -178,7 +203,7 @@ namespace mepa_servis.Controllers
             _context.ServiceItems.Add(item);
             await _context.SaveChangesAsync();
 
-            record.TotalCost = record.ServiceItems.Sum(i => i.Price);
+            record.TotalCost = record.ServiceItems.Where(i => !i.IsDeleted).Sum(i => i.Price);
             await _context.SaveChangesAsync();
 
             return Ok(item);
@@ -190,7 +215,7 @@ namespace mepa_servis.Controllers
             var item = await _context.ServiceItems.FindAsync(id);
             if (item == null) return NotFound();
 
-            // Kalıcı silmek yerine arşivliyoruz:
+            // Veritabanından silmek yerine arşive kaldırıyoruz (Soft Delete)
             item.IsDeleted = true;
             await _context.SaveChangesAsync();
 

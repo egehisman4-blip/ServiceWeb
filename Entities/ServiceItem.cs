@@ -4,6 +4,7 @@ namespace mepa_servis.Entities
 {
     public class ServiceItem
     {
+        public bool IsDeleted { get; set; } = false;
         public int Id { get; set; }
         public int ServiceRecordId { get; set; }
 

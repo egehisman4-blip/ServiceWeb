@@ -184,26 +184,17 @@ namespace mepa_servis.Controllers
             return Ok(item);
         }
 
-        [HttpDelete("delete-item/{itemId}")]
-        public async Task<IActionResult> DeleteServiceItem(int itemId)
+        [HttpDelete("item/{id}")]
+        public async Task<IActionResult> DeleteServiceItem(int id)
         {
-            var item = await _context.ServiceItems.FindAsync(itemId);
-            if (item == null) return NotFound("Parça bulunamadı.");
+            var item = await _context.ServiceItems.FindAsync(id);
+            if (item == null) return NotFound();
 
-            var record = await _context.ServiceRecords
-                .Include(r => r.ServiceItems)
-                .FirstOrDefaultAsync(r => r.Id == item.ServiceRecordId);
-
-            _context.ServiceItems.Remove(item);
+            // Kalıcı silmek yerine arşivliyoruz:
+            item.IsDeleted = true;
             await _context.SaveChangesAsync();
 
-            if (record != null)
-            {
-                record.TotalCost = record.ServiceItems.Sum(i => i.Price);
-                await _context.SaveChangesAsync();
-            }
-
-            return Ok(new { message = "Parça silindi." });
+            return Ok(new { message = "İşlem başarıyla arşive kaldırıldı." });
         }
 
         [HttpDelete("delete-vehicle/{id}")]

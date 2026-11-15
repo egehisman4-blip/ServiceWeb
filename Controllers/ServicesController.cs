@@ -240,11 +240,23 @@ namespace mepa_servis.Controllers
             var item = await _context.ServiceItems.FindAsync(id);
             if (item == null) return NotFound();
 
-            // Veritabanından silmek yerine arşive kaldırıyoruz (Soft Delete)
+            // Parçayı arşive kaldır (Soft Delete)
             item.IsDeleted = true;
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "İşlem başarıyla arşive kaldırıldı." });
+            // İlgili servis kaydını ve aktif kalan parçalarını bul
+            var record = await _context.ServiceRecords
+                .Include(r => r.ServiceItems)
+                .FirstOrDefaultAsync(r => r.Id == item.ServiceRecordId);
+
+            if (record != null)
+            {
+                // Toplam tutarı silinmeyen parçalara göre yeniden hesapla
+                record.TotalCost = record.ServiceItems.Where(i => !i.IsDeleted).Sum(i => i.Price);
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok(new { message = "İşlem başarıyla arşive kaldırıldı ve toplam tutar güncellendi." });
         }
 
         [HttpDelete("delete-vehicle/{id}")]

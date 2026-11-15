@@ -1852,16 +1852,23 @@
                     }
 
                     list.forEach(d => {
-                        const dateStr = new Date(d.date).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                        const dId = d.id || d.Id;
+                        const dDate = d.date || d.Date || Date.now();
+                        const dPlate = d.plate || d.Plate || cleanPlate;
+                        const dRegion = d.region || d.Region || '-';
+                        const dType = d.damageType || d.DamageType || '-';
+                        const dDesc = d.description || d.Description || '-';
+
+                        const dateStr = new Date(dDate).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
                         tbody.innerHTML += `
                             <tr class="hover:bg-slate-800/80 transition-all border-b border-slate-800/50">
                                 <td class="p-3 text-slate-400 text-xs">${dateStr}</td>
-                                <td class="p-3 font-mono font-bold text-blue-400">${d.plate}</td>
-                                <td class="p-3 font-semibold text-white">${d.region}</td>
-                                <td class="p-3"><span class="bg-amber-500/10 text-amber-400 font-bold px-2 py-0.5 rounded text-[11px]">${d.damageType}</span></td>
-                                <td class="p-3 text-slate-300">${d.description || '-'}</td>
+                                <td class="p-3 font-mono font-bold text-blue-400">${dPlate}</td>
+                                <td class="p-3 font-semibold text-white">${dRegion}</td>
+                                <td class="p-3"><span class="bg-amber-500/10 text-amber-400 font-bold px-2 py-0.5 rounded text-[11px]">${dType}</span></td>
+                                <td class="p-3 text-slate-300">${dDesc}</td>
                                 <td class="p-3 text-right">
-                                    <button onclick="deleteDamage(${d.id}, '${d.plate}')" class="text-red-400 hover:text-red-300 transition-all">
+                                    <button onclick="deleteDamage(${dId}, '${dPlate}')" class="text-red-400 hover:text-red-300 transition-all">
                                         <i class="fa-solid fa-trash-can"></i>
                                     </button>
                                 </td>
@@ -1876,21 +1883,13 @@
 
         async function handleAddDamage(e) {
             e.preventDefault();
-            const plate = document.getElementById('damagePlate').value.toUpperCase().trim();
+            // Kaydederken de aradaki tüm boşlukları temizliyoruz
+            const plate = document.getElementById('damagePlate').value.replace(/\s+/g, '').toUpperCase();
             const region = document.getElementById('damageRegion').value;
             const damageType = document.getElementById('damageType').value;
             const description = document.getElementById('damageDesc').value.trim();
 
-            const payload = { 
-                shopId: parseInt(currentShopId), 
-                plate: plate, 
-                plaka: plate, // Backend hangisini bekliyorsa garanti olsun
-                region: region, 
-                damageType: damageType, 
-                description: description 
-            };
-
-            console.log("Gönderilen Hasar Paketi:", payload);
+            const payload = { shopId: parseInt(currentShopId), plate, region, damageType, description };
 
             try {
                 const res = await fetch('/api/Services/damages', {
@@ -1904,17 +1903,17 @@
                     document.getElementById('damagePlate').value = '';
                     document.getElementById('damageDesc').value = '';
                     
-                    // Otomatik olarak o plakayı sorgula
-                    document.getElementById('damageSearchPlate').value = plate;
+                    // Kayıttan hemen sonra sağdaki tabloyu otomatik getir
+                    const searchPlate = document.getElementById('damageSearchPlate');
+                    if (searchPlate) {
+                        searchPlate.value = plate;
+                    }
                     fetchDamages();
                 } else {
-                    const errText = await res.text();
-                    console.error("Kayıt Hatası:", errText);
-                    alert("Hasar kaydedilemedi: " + errText);
+                    alert("Hasar kaydedilemedi.");
                 }
             } catch (err) {
-                console.error("Bağlantı Hatası:", err);
-                alert("Bağlantı hatası oluştu.");
+                alert("Bağlantı hatası.");
             }
         }
         async function deleteDamage(id, plate) {

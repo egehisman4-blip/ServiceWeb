@@ -823,7 +823,6 @@
         let currentShopId = sessionStorage.getItem("shopId") || null;
         let shopData = { shopName: "OtoServis Pro", phone: "", address: "", iban: "", logoUrl: "" };
 
-        // Güvenli Header Üreteci (JWT Token Destekli)
         function getAuthHeaders() {
             const token = sessionStorage.getItem("jwtToken");
             return {
@@ -883,7 +882,7 @@
                     const data = await res.json();
                     sessionStorage.setItem("shopAuth", "true");
                     sessionStorage.setItem("shopId", data.shopId);
-                    sessionStorage.setItem("jwtToken", data.token); // GÜVENLİK TOKEN'I SAKLANIYOR
+                    sessionStorage.setItem("jwtToken", data.token);
                     currentShopId = data.shopId;
 
                     document.getElementById("loginOverlay").classList.add("hidden");
@@ -1186,14 +1185,20 @@
             const records = currentVehicleData.serviceRecords || currentVehicleData.ServiceRecords || [];
 
             if (records.length > 0) {
-                const lastRec = records[records.length - 1];
-                currentRecordId = lastRec.id || lastRec.Id;
-                document.getElementById('admStatusSelect').value = lastRec.status || lastRec.Status || 1;
-                document.getElementById('admTotalCost').innerText = `${lastRec.totalCost || lastRec.TotalCost || 0} ₺`;
+                // HATA ÇÖZÜMÜ: Bugünün tarihine ait kayıt var mı kontrol et, varsa onu seç, yoksa en son kaydı baz al
+                const todayStr = new Date().toDateString();
+                let targetRec = records.find(r => new Date(r.entryDate || r.EntryDate).toDateString() === todayStr);
+                if (!targetRec) {
+                    targetRec = records[records.length - 1];
+                }
+
+                currentRecordId = targetRec.id || targetRec.Id;
+                document.getElementById('admStatusSelect').value = targetRec.status || targetRec.Status || 1;
+                document.getElementById('admTotalCost').innerText = `${targetRec.totalCost || targetRec.TotalCost || 0} ₺`;
 
                 const itemListDiv = document.getElementById('admItemList');
                 itemListDiv.innerHTML = '';
-                const items = lastRec.serviceItems || lastRec.ServiceItems || [];
+                const items = targetRec.serviceItems || targetRec.ServiceItems || [];
 
                 if (items.length > 0) {
                     items.forEach(item => {
@@ -1214,12 +1219,13 @@
                         `;
                     });
                 } else {
-                    itemListDiv.innerHTML = `<div class="text-xs text-slate-500 py-1">Henüz parça/işçilik eklenmedi.</div>`;
+                    itemListDiv.innerHTML = `<div class="text-xs text-slate-500 py-1">Bu kayda ait parça/işçilik eklenmedi.</div>`;
                 }
 
                 const modalHistoryList = document.getElementById('modalHistoryList');
                 modalHistoryList.innerHTML = '';
 
+                // Geçmiş kayıtları en yenisi üstte olacak şekilde ters çevirip listeliyoruz
                 [...records].reverse().forEach((rec) => {
                     const entryDate = new Date(rec.entryDate || rec.EntryDate || Date.now()).toLocaleDateString('tr-TR');
                     const recItems = rec.serviceItems || rec.ServiceItems || [];
@@ -1432,8 +1438,6 @@
             html2pdf().from(element).save(`Is_Emri_${plate}.pdf`);
         }
 
-        // --- STOK YÖNETİMİ --- //
-
         async function fetchStockItems() {
             try {
                 const res = await fetch(`/api/Services/stock?shopId=${currentShopId}`, {
@@ -1443,9 +1447,7 @@
                     const items = await res.json();
                     renderStockView(items);
                 }
-            } catch (err) {
-                console.error("Stok çekme hatası:", err);
-            }
+            } catch (err) {}
         }
 
         function renderStockView(items) {
@@ -1533,8 +1535,6 @@
             if (res.ok) fetchStockItems();
         }
 
-        // --- FİNANS YÖNETİMİ --- //
-
         async function fetchFinanceRecords() {
             try {
                 const res = await fetch(`/api/Services/finance?shopId=${currentShopId}`, {
@@ -1544,9 +1544,7 @@
                     const records = await res.json();
                     renderFinanceView(records);
                 }
-            } catch (err) {
-                console.error("Finans verileri çekilemedi:", err);
-            }
+            } catch (err) {}
         }
 
         function renderFinanceView(records) {
@@ -1634,8 +1632,6 @@
             }
         }
 
-        // --- RANDEVU YÖNETİMİ --- //
-
         async function fetchAppointments() {
             try {
                 const res = await fetch(`/api/Services/appointments?shopId=${currentShopId}`, {
@@ -1645,9 +1641,7 @@
                     const list = await res.json();
                     renderAppointmentsView(list);
                 }
-            } catch (err) {
-                console.error("Randevular çekilemedi:", err);
-            }
+            } catch (err) {}
         }
 
         function renderAppointmentsView(list) {
@@ -1725,8 +1719,6 @@
             });
             if (res.ok) fetchAppointments();
         }
-
-        // --- ARAÇ KABUL & ÇİZİK HARİTASI --- //
 
         async function fetchDamages() {
             const plateInput = document.getElementById('damageSearchPlate');
@@ -1824,7 +1816,6 @@
                 alert("Silme başarısız.");
             }
         }
-
     </script>
 </body>
 </html>

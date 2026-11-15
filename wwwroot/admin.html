@@ -236,13 +236,13 @@
                     <form id="createVehicleForm" onsubmit="handleCreateVehicle(event)" class="space-y-4">
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Plaka</label>
-                            <input type="text" id="plaka" placeholder="Örn: 34KEB128" required
+                            <input type="text" id="plaka" placeholder="Örn: 34ABC123" required
                                 class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white uppercase font-bold focus:border-blue-500 focus:outline-none">
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Marka</label>
-                                <input type="text" id="marka" list="carBrandsList" placeholder="Peugeot" required
+                                <input type="text" id="marka" list="carBrandsList" placeholder="Örn: Renault" required
                                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-blue-500 focus:outline-none">
                                 <datalist id="carBrandsList">
                                     <option value="Peugeot">
@@ -279,7 +279,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Model</label>
-                                <input type="text" id="model" list="carModelsList" placeholder="408, 320d..." required
+                                <input type="text" id="model" list="carModelsList" placeholder="Örn: Megane, Corolla..." required
                                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-blue-500 focus:outline-none">
                                 <datalist id="carModelsList">
                                     <!-- Markaya göre dinamik dolacak -->
@@ -294,18 +294,18 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Mevcut KM</label>
-                                <input type="number" id="mevcutKm" placeholder="63300" required
+                                <input type="number" id="mevcutKm" placeholder="Örn: 85000" required
                                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-blue-500 focus:outline-none">
                             </div>
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Müşteri Ad Soyad</label>
-                            <input type="text" id="musteriAdSoyad" placeholder="Ege Hışman" required
+                            <input type="text" id="musteriAdSoyad" placeholder="Örn: Ahmet Yılmaz" required
                                 class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Müşteri Telefon</label>
-                            <input type="text" id="musteriTelefon" placeholder="05528674965" required
+                            <input type="text" id="musteriTelefon" placeholder="Örn: 05551234567" required
                                 class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none">
                         </div>
                         <div>
@@ -327,7 +327,7 @@
                         </h3>
                         
                         <div class="flex gap-3 mb-6">
-                            <input type="text" id="searchPlaka" placeholder="Plaka Girin (Örn: 34KEB128)" 
+                            <input type="text" id="searchPlaka" placeholder="Plaka Girin (Örn: 34ABC123)" 
                                 class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white uppercase font-bold focus:border-blue-500 focus:outline-none">
                             <button onclick="fetchAdminVehicle()" class="bg-slate-800 hover:bg-slate-700 text-white px-6 py-2.5 rounded-xl font-semibold transition-all">
                                 Ara
@@ -499,7 +499,7 @@
                     <form onsubmit="handleAddDamage(event)" class="space-y-4">
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1">Plaka</label>
-                            <input type="text" id="damagePlate" placeholder="Örn: 34KEB128" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 uppercase font-bold">
+                            <input type="text" id="damagePlate" placeholder="Örn: 34ABC123" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 uppercase font-bold">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1">Hasarlı Bölge</label>
@@ -759,7 +759,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 mb-1">Araç Plakası</label>
-                            <input type="text" placeholder="Örn: 34KEB128" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 uppercase">
+                            <input type="text" placeholder="Örn: 34ABC123" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 uppercase">
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>

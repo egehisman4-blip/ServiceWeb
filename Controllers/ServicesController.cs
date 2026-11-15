@@ -137,13 +137,12 @@ namespace mepa_servis.Controllers
 
             return Ok(new { message = "Araç başarıyla kaydedildi.", vehicleId = vehicle.Id });
         }
-
         [HttpGet("search/{plate}")]
         public async Task<IActionResult> SearchVehicle(string plate, [FromQuery] int shopId)
         {
             var cleanPlate = plate.Trim().ToUpper();
             
-            // ShopId filtresini kaldırarak sadece plakaya göre arama yapıyoruz
+            // Aracı ve geçmiş kayıtlarını ilişkili şekilde çekiyoruz
             var vehicle = await _context.Vehicles
                 .Include(v => v.ServiceRecords)
                     .ThenInclude(sr => sr.ServiceItems.Where(si => !si.IsDeleted))
@@ -152,6 +151,27 @@ namespace mepa_servis.Controllers
             if (vehicle == null)
             {
                 return NotFound(new { message = "Bu plaka sistemde bulunamadı." });
+            }
+
+            // --- KÖK ÇÖZÜM: BUGÜNÜN SERVİS KAYDI KONTROLÜ ---
+            var today = DateTime.Today;
+            var todayRecord = vehicle.ServiceRecords?
+                .FirstOrDefault(sr => sr.EntryDate.Date == today);
+
+            // Eğer bugün için henüz bir servis kaydı açılmamışsa, otomatik olarak bugün adına yeni kayıt oluştur!
+            if (todayRecord == null)
+            {
+                var newRecord = new ServiceRecord
+                {
+                    EntryDate = DateTime.Now,
+                    MechanicNote = "Araç kabul edildi.",
+                    Status = (ServiceStatus)1,
+                    ServiceItems = new List<ServiceItem>()
+                };
+
+                vehicle.ServiceRecords ??= new List<ServiceRecord>();
+                vehicle.ServiceRecords.Add(newRecord);
+                await _context.SaveChangesAsync();
             }
 
             return Ok(vehicle);

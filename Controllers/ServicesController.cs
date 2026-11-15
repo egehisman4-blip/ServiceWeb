@@ -307,6 +307,16 @@ namespace mepa_servis.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { message = "Stok silindi." });
         }
+        [HttpPatch("update-stock/{id}")]
+        public async Task<IActionResult> UpdateStockQuantity(int id, [FromBody] int newQuantity)
+        {
+            var item = await _context.StockItems.FindAsync(id);
+            if (item == null) return NotFound();
+
+            item.Quantity = newQuantity < 0 ? 0 : newQuantity;
+            await _context.SaveChangesAsync();
+            return Ok(item);
+        }
 
 
         // --- 6. FİNANS & CİRO YÖNETİMİ (DÜKKAN İZOLELİ) --- //

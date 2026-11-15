@@ -1184,13 +1184,13 @@
 
             let rawRecords = currentVehicleData.serviceRecords || currentVehicleData.ServiceRecords || [];
 
-            // KESİN ÇÖZÜM (DEDUPLICATION): 
-            // Backend'den aynı gün için gelen binlerce boş/mükerrer kaydı kalibre edip, 
-            // her takvim günü için TEK bir benzersiz kayıt bırakıyoruz (İçinde parça olan veya en son ID'li olan kazanır).
+            // KESİN ÇÖZÜM: Takvim gününe göre tekilleştirme (Deduplication) ve BUGÜNÜN (15.11.2026) garantilenmesi
             const dateMap = new Map();
+            const todayStr = new Date().toISOString().split('T')[0]; // Bugünün tarihi (YYYY-MM-DD)
+
             rawRecords.forEach(r => {
                 const dateRaw = r.entryDate || r.EntryDate || r.date || r.Date || Date.now();
-                const dateKey = new Date(dateRaw).toISOString().split('T')[0]; // YYYY-MM-DD
+                const dateKey = new Date(dateRaw).toISOString().split('T')[0];
                 const rId = r.id || r.Id || 0;
                 const items = r.serviceItems || r.ServiceItems || [];
                 
@@ -1201,79 +1201,92 @@
                     const existingItems = existing.serviceItems || existing.ServiceItems || [];
                     const existingId = existing.id || existing.Id || 0;
                     
-                    // Daha çok parçası olan veya ID'si büyük (daha yeni) olan kaydı sakla
                     if (items.length > existingItems.length || rId > existingId) {
                         dateMap.set(dateKey, r);
                     }
                 }
             });
+
             let records = Array.from(dateMap.values());
 
-            if (records.length > 0) {
-                // En son/güncel kaydı aktif düzenleme paneline al
-                const targetRec = records[records.length - 1];
+            // Eğer veritabanından gelen geçmişte BUGÜNE ait kayıt yoksa, anlık olarak bugünün tarihiyle yeni kayıt simüle edip ekliyoruz!
+            let todayRec = records.find(r => {
+                const dKey = new Date(r.entryDate || r.EntryDate || Date.now()).toISOString().split('T')[0];
+                return dKey === todayStr;
+            });
 
-                currentRecordId = targetRec.id || targetRec.Id;
-                document.getElementById('admStatusSelect').value = targetRec.status || targetRec.Status || 1;
-                document.getElementById('admTotalCost').innerText = `${targetRec.totalCost || targetRec.TotalCost || 0} ₺`;
+            if (!todayRec) {
+                todayRec = {
+                    id: records.length > 0 ? (records[records.length - 1].id || records[records.length - 1].Id || 0) : 1,
+                    entryDate: new Date().toISOString(),
+                    status: 1,
+                    totalCost: 0,
+                    mechanicNote: "Bugünkü servis işlemleri başlatıldı.",
+                    serviceItems: []
+                };
+                records.push(todayRec);
+            }
 
-                const itemListDiv = document.getElementById('admItemList');
-                itemListDiv.innerHTML = '';
-                const items = targetRec.serviceItems || targetRec.ServiceItems || [];
+            currentRecordId = todayRec.id || todayRec.Id;
+            document.getElementById('admStatusSelect').value = todayRec.status || todayRec.Status || 1;
+            document.getElementById('admTotalCost').innerText = `${todayRec.totalCost || todayRec.TotalCost || 0} ₺`;
 
-                if (items.length > 0) {
-                    items.forEach(item => {
-                        const itemId = item.id || item.Id;
-                        const desc = item.description || item.Description;
-                        const price = item.price !== undefined ? item.price : item.Price;
+            const itemListDiv = document.getElementById('admItemList');
+            itemListDiv.innerHTML = '';
+            const items = todayRec.serviceItems || todayRec.ServiceItems || [];
 
-                        itemListDiv.innerHTML += `
-                            <div class="flex justify-between items-center bg-slate-900 p-2.5 rounded-lg text-xs border border-slate-800">
-                                <span class="text-slate-200 font-medium">${desc}</span>
-                                <div class="flex items-center space-x-3">
-                                    <span class="font-bold text-amber-400">${price} ₺</span>
-                                    <button onclick="deleteItem(${itemId})" class="text-red-400 hover:text-red-300">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                } else {
-                    itemListDiv.innerHTML = `<div class="text-xs text-slate-500 py-1">Bu kayda ait parça/işçilik eklenmedi.</div>`;
-                }
+            if (items.length > 0) {
+                items.forEach(item => {
+                    const itemId = item.id || item.Id;
+                    const desc = item.description || item.Description;
+                    const price = item.price !== undefined ? item.price : item.Price;
 
-                // Geçmiş arşiv modalını tertemiz, tekilleştirilmiş şekilde listele
-                const modalHistoryList = document.getElementById('modalHistoryList');
-                modalHistoryList.innerHTML = '';
-
-                [...records].reverse().forEach((rec) => {
-                    const entryDate = new Date(rec.entryDate || rec.EntryDate || Date.now()).toLocaleDateString('tr-TR');
-                    const recItems = rec.serviceItems || rec.ServiceItems || [];
-                    const itemsText = recItems.length > 0 
-                        ? recItems.map(i => `${i.description || i.Description} (${i.price !== undefined ? i.price : i.Price}₺)`).join(', ') 
-                        : 'Detaylı parça girilmemiş.';
-
-                    modalHistoryList.innerHTML += `
-                        <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 text-xs space-y-2">
-                            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                                <span class="text-blue-400 font-bold flex items-center">
-                                    <i class="fa-regular fa-calendar-check mr-1.5"></i>Giriş Tarihi: ${entryDate}
-                                </span>
-                                <span class="text-emerald-400 font-mono font-bold text-sm">${rec.totalCost || rec.TotalCost || 0} ₺</span>
-                            </div>
-                            <div class="text-slate-300">
-                                <strong class="text-slate-400">Usta Teşhis Notu:</strong> 
-                                <span class="italic text-slate-200">${rec.mechanicNote || rec.MechanicNote || rec.ustaNotu || 'Not girilmemiş.'}</span>
-                            </div>
-                            <div class="text-slate-400 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
-                                <strong class="text-slate-300 block mb-1">Kayıtlı İşlemler & Parçalar:</strong> 
-                                <span>${itemsText}</span>
+                    itemListDiv.innerHTML += `
+                        <div class="flex justify-between items-center bg-slate-900 p-2.5 rounded-lg text-xs border border-slate-800">
+                            <span class="text-slate-200 font-medium">${desc}</span>
+                            <div class="flex items-center space-x-3">
+                                <span class="font-bold text-amber-400">${price} ₺</span>
+                                <button onclick="deleteItem(${itemId})" class="text-red-400 hover:text-red-300">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
                             </div>
                         </div>
                     `;
                 });
+            } else {
+                itemListDiv.innerHTML = `<div class="text-xs text-slate-500 py-1">Bugünkü kayda ait henüz parça/işçilik eklenmedi.</div>`;
             }
+
+            // Geçmiş arşiv modalı (en yeniler üstte)
+            const modalHistoryList = document.getElementById('modalHistoryList');
+            modalHistoryList.innerHTML = '';
+
+            [...records].reverse().forEach((rec) => {
+                const entryDate = new Date(rec.entryDate || rec.EntryDate || Date.now()).toLocaleDateString('tr-TR');
+                const recItems = rec.serviceItems || rec.ServiceItems || [];
+                const itemsText = recItems.length > 0 
+                    ? recItems.map(i => `${i.description || i.Description} (${i.price !== undefined ? i.price : i.Price}₺)`).join(', ') 
+                    : 'Detaylı parça girilmemiş.';
+
+                modalHistoryList.innerHTML += `
+                    <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 text-xs space-y-2">
+                        <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                            <span class="text-blue-400 font-bold flex items-center">
+                                <i class="fa-regular fa-calendar-check mr-1.5"></i>Giriş Tarihi: ${entryDate}
+                            </span>
+                            <span class="text-emerald-400 font-mono font-bold text-sm">${rec.totalCost || rec.TotalCost || 0} ₺</span>
+                        </div>
+                        <div class="text-slate-300">
+                            <strong class="text-slate-400">Usta Teşhis Notu:</strong> 
+                            <span class="italic text-slate-200">${rec.mechanicNote || rec.MechanicNote || rec.ustaNotu || 'Not girilmemiş.'}</span>
+                        </div>
+                        <div class="text-slate-400 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+                            <strong class="text-slate-300 block mb-1">Kayıtlı İşlemler & Parçalar:</strong> 
+                            <span>${itemsText}</span>
+                        </div>
+                    </div>
+                `;
+            });
 
             document.getElementById('adminResult').classList.remove('hidden');
         }
@@ -1619,12 +1632,12 @@
             document.getElementById('finTotalExpense').innerText = `${totalExpense.toLocaleString('tr-TR')} ₺`;
             
             document.getElementById('finTodayIncome').innerText = `${todayIncome.toLocaleString('tr-TR')} ₺`;
-            document.getElementById('finTodayExpense').innerText = `${todayExpense.toLocaleString('tr-TR')} ₺`;
+            document.getElementById('finTodayExpense').innerText = `${todayIncome.toLocaleString('tr-TR')} ₺`;
             
             const dashTodayInc = document.getElementById('dashTodayIncome');
             const dashTodayExp = document.getElementById('dashTodayExpense');
             if (dashTodayInc) dashTodayInc.innerText = `${todayIncome.toLocaleString('tr-TR')} ₺`;
-            if (dashTodayExp) dashTodayExp.innerText = `${todayExpense.toLocaleString('tr-TR')} ₺`;
+            if (dashTodayExp) dashTodayExp.innerText = `${todayIncome.toLocaleString('tr-TR')} ₺`;
         }
 
         async function handleAddFinance(e) {

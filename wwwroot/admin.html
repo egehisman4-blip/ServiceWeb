@@ -1881,7 +1881,16 @@
             const damageType = document.getElementById('damageType').value;
             const description = document.getElementById('damageDesc').value.trim();
 
-            const payload = { shopId: parseInt(currentShopId), plate, region, damageType, description };
+            const payload = { 
+                shopId: parseInt(currentShopId), 
+                plate: plate, 
+                plaka: plate, // Backend hangisini bekliyorsa garanti olsun
+                region: region, 
+                damageType: damageType, 
+                description: description 
+            };
+
+            console.log("Gönderilen Hasar Paketi:", payload);
 
             try {
                 const res = await fetch('/api/Services/damages', {
@@ -1895,18 +1904,19 @@
                     document.getElementById('damagePlate').value = '';
                     document.getElementById('damageDesc').value = '';
                     
-                    const searchPlate = document.getElementById('damageSearchPlate');
-                    if(searchPlate && searchPlate.value.toUpperCase().trim() === plate) {
-                        fetchDamages();
-                    }
+                    // Otomatik olarak o plakayı sorgula
+                    document.getElementById('damageSearchPlate').value = plate;
+                    fetchDamages();
                 } else {
-                    alert("Hasar kaydedilemedi.");
+                    const errText = await res.text();
+                    console.error("Kayıt Hatası:", errText);
+                    alert("Hasar kaydedilemedi: " + errText);
                 }
             } catch (err) {
-                alert("Bağlantı hatası.");
+                console.error("Bağlantı Hatası:", err);
+                alert("Bağlantı hatası oluştu.");
             }
         }
-
         async function deleteDamage(id, plate) {
             if (!confirm("Bu hasar kaydını silmek istediğinize emin misiniz?")) return;
             try {

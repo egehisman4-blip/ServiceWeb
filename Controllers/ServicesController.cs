@@ -142,23 +142,22 @@ namespace mepa_servis.Controllers
         {
             var cleanPlate = plate.Trim().ToUpper();
             
-            // Aracı ve geçmiş kayıtlarını ilişkili şekilde çekiyoruz
+            // Sadece ilgili dükkana (shopId) ait aracı ve servis kayıtlarını getiriyoruz!
             var vehicle = await _context.Vehicles
                 .Include(v => v.ServiceRecords)
                     .ThenInclude(sr => sr.ServiceItems.Where(si => !si.IsDeleted))
-                .FirstOrDefaultAsync(v => v.Plate.ToUpper() == cleanPlate);
+                .FirstOrDefaultAsync(v => v.Plate.ToUpper() == cleanPlate && v.ShopId == shopId);
 
             if (vehicle == null)
             {
-                return NotFound(new { message = "Bu plaka sistemde bulunamadı." });
+                return NotFound(new { message = "Bu plaka bu dükkanda bulunamadı." });
             }
 
-            // --- KÖK ÇÖZÜM: BUGÜNÜN SERVİS KAYDI KONTROLÜ ---
+            // Bugünün servis kaydı kontrolü (Bugün için yoksa otomatik açar)
             var today = DateTime.Today;
             var todayRecord = vehicle.ServiceRecords?
                 .FirstOrDefault(sr => sr.EntryDate.Date == today);
 
-            // Eğer bugün için henüz bir servis kaydı açılmamışsa, otomatik olarak bugün adına yeni kayıt oluştur!
             if (todayRecord == null)
             {
                 var newRecord = new ServiceRecord

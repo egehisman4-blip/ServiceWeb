@@ -1182,10 +1182,32 @@
             document.getElementById('admCurrentKmInput').value = currentKm || '';
             document.getElementById('modalHistorySubtitle').innerText = `${plate} - ${brand} ${model} (${ownerName})`;
 
-            const records = currentVehicleData.serviceRecords || currentVehicleData.ServiceRecords || [];
+            let records = currentVehicleData.serviceRecords || currentVehicleData.ServiceRecords || [];
+
+            // KESİN ÇÖZÜM: Aynı güne ait veya ID'si olmayan mükerrer/boş kayıtlar backend'den geliyor;
+            // Bunları ID'ye göre veya aynı tarihe sahip paraleller arasından en dolu (parça içeren veya en son ID) olanı seçerek filtreliyoruz.
+            const uniqueMap = new Map();
+            records.forEach(r => {
+                const rId = r.id || r.Id;
+                const rDate = new Date(r.entryDate || r.EntryDate || Date.now()).toDateString();
+                const itemsCount = (r.serviceItems || r.ServiceItems || []).length;
+                
+                // Eğer bu tarihte daha önce bir kayıt eklediysek, hangisi daha dolu/yeni ise onu tutalım
+                if (uniqueMap.has(rDate)) {
+                    const existing = uniqueMap.get(rDate);
+                    const existingItems = (existing.serviceItems || existing.ServiceItems || []).length;
+                    const existingId = existing.id || existing.Id || 0;
+                    
+                    if (rId > existingId || itemsCount > existingItems) {
+                        uniqueMap.set(rDate, r);
+                    }
+                } else {
+                    uniqueMap.set(rDate, r);
+                }
+            });
+            records = Array.from(uniqueMap.values());
 
             if (records.length > 0) {
-                // HATA ÇÖZÜMÜ: Bugünün tarihine ait kayıt var mı kontrol et, varsa onu seç, yoksa en son kaydı baz al
                 const todayStr = new Date().toDateString();
                 let targetRec = records.find(r => new Date(r.entryDate || r.EntryDate).toDateString() === todayStr);
                 if (!targetRec) {
@@ -1225,7 +1247,7 @@
                 const modalHistoryList = document.getElementById('modalHistoryList');
                 modalHistoryList.innerHTML = '';
 
-                // Geçmiş kayıtları en yenisi üstte olacak şekilde ters çevirip listeliyoruz
+                // Süzülmüş ve temizlenmiş geçmiş kayıtları en yenisi üstte olacak şekilde listele
                 [...records].reverse().forEach((rec) => {
                     const entryDate = new Date(rec.entryDate || rec.EntryDate || Date.now()).toLocaleDateString('tr-TR');
                     const recItems = rec.serviceItems || rec.ServiceItems || [];

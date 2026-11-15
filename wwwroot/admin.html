@@ -172,7 +172,7 @@
                 </div>
             </div>
 
-            <!-- YENİ EKLENEN: GÜNLÜK HIZLI ÖZET KARTLARI -->
+            <!-- GÜNLÜK HIZLI ÖZET KARTLARI -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div class="bg-slate-900 border border-emerald-500/30 p-5 rounded-2xl flex flex-col justify-center">
                     <div class="text-xs text-emerald-400 font-bold uppercase mb-1 flex items-center"><i class="fa-solid fa-coins mr-2"></i>Bugünkü Ciro</div>
@@ -629,7 +629,7 @@
                 <p class="text-xs text-slate-400">Dükkanın genel muhasebesi, günlük ciro ve nakit akışını izleyin.</p>
             </div>
 
-            <!-- GÜNLÜK FİNANS ÖZETİ EKLENDİ -->
+            <!-- GÜNLÜK FİNANS ÖZETİ -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-b border-slate-800 pb-6">
                 <div class="bg-slate-900 border border-emerald-500/50 p-5 rounded-2xl">
                     <div class="text-xs text-emerald-400 font-bold uppercase mb-1 flex items-center"><i class="fa-solid fa-calendar-day mr-2"></i>Sadece Bugünkü Ciro (GELİR)</div>
@@ -823,6 +823,15 @@
         let currentShopId = sessionStorage.getItem("shopId") || null;
         let shopData = { shopName: "OtoServis Pro", phone: "", address: "", iban: "", logoUrl: "" };
 
+        // Güvenli Header Üreteci (JWT Token Destekli)
+        function getAuthHeaders() {
+            const token = sessionStorage.getItem("jwtToken");
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : ''
+            };
+        }
+
         window.onload = function() {
             if (sessionStorage.getItem("shopAuth") === "true" && currentShopId) {
                 document.getElementById("loginOverlay").classList.add("hidden");
@@ -832,7 +841,7 @@
                 fetchUpcomingMaintenances();
                 loadCustomers();
                 fetchStockItems();
-                fetchFinanceRecords(); // Günlük özeti de hesaplayacak
+                fetchFinanceRecords();
                 fetchAppointments();
             }
         };
@@ -874,6 +883,7 @@
                     const data = await res.json();
                     sessionStorage.setItem("shopAuth", "true");
                     sessionStorage.setItem("shopId", data.shopId);
+                    sessionStorage.setItem("jwtToken", data.token); // GÜVENLİK TOKEN'I SAKLANIYOR
                     currentShopId = data.shopId;
 
                     document.getElementById("loginOverlay").classList.add("hidden");
@@ -896,6 +906,7 @@
         function logout() {
             sessionStorage.removeItem("shopAuth");
             sessionStorage.removeItem("shopId");
+            sessionStorage.removeItem("jwtToken");
             location.reload();
         }
 
@@ -907,7 +918,9 @@
 
         async function loadShopSettings() {
             try {
-                const res = await fetch(`/api/Services/shop-settings?shopId=${currentShopId}`);
+                const res = await fetch(`/api/Services/shop-settings?shopId=${currentShopId}`, {
+                    headers: getAuthHeaders()
+                });
                 if (res.ok) {
                     shopData = await res.json();
                     const sName = shopData.shopName || shopData.ShopName || 'OtoServis Pro';
@@ -935,7 +948,7 @@
             try {
                 const res = await fetch('/api/Services/shop-settings', {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(payload)
                 });
 
@@ -970,11 +983,13 @@
         async function fetchUpcomingMaintenances() {
             const tbody = document.getElementById('maintenanceTableBody');
             try {
-                const res = await fetch(`/api/Services/upcoming-maintenances?shopId=${currentShopId}`);
+                const res = await fetch(`/api/Services/upcoming-maintenances?shopId=${currentShopId}`, {
+                    headers: getAuthHeaders()
+                });
                 if (res.ok) {
                     const list = await res.json();
                     tbody.innerHTML = '';
-                    document.getElementById('dashTotalVehicles').innerText = list.length; // DASHBOARD ARAÇ SAYISI GÜNCELLEMESİ
+                    document.getElementById('dashTotalVehicles').innerText = list.length;
                     
                     if (list.length === 0) {
                         tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-500">Kayıtlı araç bulunmuyor.</td></tr>`;
@@ -1031,7 +1046,9 @@
         async function loadCustomers() {
             const tbody = document.getElementById('customerTableBody');
             try {
-                const res = await fetch(`/api/Services/upcoming-maintenances?shopId=${currentShopId}`);
+                const res = await fetch(`/api/Services/upcoming-maintenances?shopId=${currentShopId}`, {
+                    headers: getAuthHeaders()
+                });
                 if (res.ok) {
                     const list = await res.json();
                     tbody.innerHTML = '';
@@ -1111,7 +1128,7 @@
             try {
                 const res = await fetch('/api/Services/create-vehicle', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(payload)
                 });
 
@@ -1136,7 +1153,9 @@
             const cleanSearch = searchInput.replace(/\s+/g, '').toUpperCase();
 
             try {
-                const res = await fetch(`/api/Services/search/${encodeURIComponent(cleanSearch)}?shopId=${currentShopId}`);
+                const res = await fetch(`/api/Services/search/${encodeURIComponent(cleanSearch)}?shopId=${currentShopId}`, {
+                    headers: getAuthHeaders()
+                });
                 if (res.ok) {
                     currentVehicleData = await res.json();
                     renderAdminView();
@@ -1245,7 +1264,7 @@
             try {
                 const res = await fetch(`/api/Services/update-km/${vId}`, {
                     method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(newKm)
                 });
 
@@ -1270,7 +1289,7 @@
 
             const res = await fetch(`/api/Services/add-item/${currentRecordId}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({ description: desc, price: price })
             });
 
@@ -1278,12 +1297,6 @@
                 document.getElementById('itemDesc').value = '';
                 document.getElementById('itemPrice').value = '';
                 await fetchAdminVehicle();
-                
-                // Ciroya otomatik gelir eklemek istersen, aşağıdaki satırı aktif edebilirsin
-                // const payload = { shopId: parseInt(currentShopId), description: `${document.getElementById('admPlate').innerText} - ${desc}`, type: 'Gelir', amount: price };
-                // await fetch('/api/Services/finance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                // fetchFinanceRecords();
-                
             } else {
                 alert('Parça eklenemedi.');
             }
@@ -1291,9 +1304,18 @@
 
         async function deleteItem(itemId) {
             if (!confirm('Bu parçayı silmek istediğinizden emin misiniz?')) return;
-            const res = await fetch(`/api/Services/delete-item/${itemId}`, { method: 'DELETE' });
-            if (res.ok) {
-                await fetchAdminVehicle();
+            try {
+                const res = await fetch(`/api/Services/item/${itemId}`, { 
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                if (res.ok) {
+                    await fetchAdminVehicle();
+                } else {
+                    alert('Parça silinemedi.');
+                }
+            } catch (err) {
+                alert('Bağlantı hatası: ' + err.message);
             }
         }
 
@@ -1304,7 +1326,10 @@
 
             if (!confirm(`${plate} plakalı aracı ve tüm servis geçmişini SİLMEK istediğinize emin misiniz?`)) return;
 
-            const res = await fetch(`/api/Services/delete-vehicle/${vId}`, { method: 'DELETE' });
+            const res = await fetch(`/api/Services/delete-vehicle/${vId}`, { 
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
             if (res.ok) {
                 alert('Araç kaydı tamamen silindi.');
                 document.getElementById('adminResult').classList.add('hidden');
@@ -1321,7 +1346,7 @@
 
             const res = await fetch(`/api/Services/update-status/${currentRecordId}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(newStatus)
             });
 
@@ -1411,7 +1436,9 @@
 
         async function fetchStockItems() {
             try {
-                const res = await fetch(`/api/Services/stock?shopId=${currentShopId}`);
+                const res = await fetch(`/api/Services/stock?shopId=${currentShopId}`, {
+                    headers: getAuthHeaders()
+                });
                 if (res.ok) {
                     const items = await res.json();
                     renderStockView(items);
@@ -1482,7 +1509,7 @@
             try {
                 const res = await fetch('/api/Services/stock', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(payload)
                 });
 
@@ -1499,7 +1526,10 @@
 
         async function deleteStockItem(id) {
             if (!confirm("Bu parçayı stoktan silmek istediğinize emin misiniz?")) return;
-            const res = await fetch(`/api/Services/stock/${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/Services/stock/${id}`, { 
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
             if (res.ok) fetchStockItems();
         }
 
@@ -1507,7 +1537,9 @@
 
         async function fetchFinanceRecords() {
             try {
-                const res = await fetch(`/api/Services/finance?shopId=${currentShopId}`);
+                const res = await fetch(`/api/Services/finance?shopId=${currentShopId}`, {
+                    headers: getAuthHeaders()
+                });
                 if (res.ok) {
                     const records = await res.json();
                     renderFinanceView(records);
@@ -1562,7 +1594,6 @@
                 });
             }
 
-            // GÜNLÜK VE TOPLAM DEĞERLERİ YAZDIRMA
             document.getElementById('finTotalNet').innerText = `${(totalIncome - totalExpense).toLocaleString('tr-TR')} ₺`;
             document.getElementById('finTotalNet').className = `text-2xl font-black ${(totalIncome - totalExpense) >= 0 ? 'text-emerald-400' : 'text-red-400'}`;
             document.getElementById('finTotalIncome').innerText = `${totalIncome.toLocaleString('tr-TR')} ₺`;
@@ -1571,7 +1602,6 @@
             document.getElementById('finTodayIncome').innerText = `${todayIncome.toLocaleString('tr-TR')} ₺`;
             document.getElementById('finTodayExpense').innerText = `${todayExpense.toLocaleString('tr-TR')} ₺`;
             
-            // DASHBOARD'DAKİ GÜNLÜK DEĞERLERİ YAZDIRMA
             const dashTodayInc = document.getElementById('dashTodayIncome');
             const dashTodayExp = document.getElementById('dashTodayExpense');
             if (dashTodayInc) dashTodayInc.innerText = `${todayIncome.toLocaleString('tr-TR')} ₺`;
@@ -1589,7 +1619,7 @@
             try {
                 const res = await fetch('/api/Services/finance', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(payload)
                 });
 
@@ -1608,7 +1638,9 @@
 
         async function fetchAppointments() {
             try {
-                const res = await fetch(`/api/Services/appointments?shopId=${currentShopId}`);
+                const res = await fetch(`/api/Services/appointments?shopId=${currentShopId}`, {
+                    headers: getAuthHeaders()
+                });
                 if (res.ok) {
                     const list = await res.json();
                     renderAppointmentsView(list);
@@ -1670,7 +1702,7 @@
             try {
                 const res = await fetch('/api/Services/appointments', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(payload)
                 });
 
@@ -1687,7 +1719,10 @@
 
         async function deleteAppointment(id) {
             if (!confirm("Bu randevuyu silmek istediğinize emin misiniz?")) return;
-            const res = await fetch(`/api/Services/appointments/${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/Services/appointments/${id}`, { 
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
             if (res.ok) fetchAppointments();
         }
 
@@ -1706,7 +1741,9 @@
             tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">Yükleniyor...</td></tr>`;
 
             try {
-                const res = await fetch(`/api/Services/damages/${encodeURIComponent(cleanPlate)}?shopId=${currentShopId}`);
+                const res = await fetch(`/api/Services/damages/${encodeURIComponent(cleanPlate)}?shopId=${currentShopId}`, {
+                    headers: getAuthHeaders()
+                });
                 if (res.ok) {
                     const list = await res.json();
                     tbody.innerHTML = '';
@@ -1751,7 +1788,7 @@
             try {
                 const res = await fetch('/api/Services/damages', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(payload)
                 });
 
@@ -1775,7 +1812,10 @@
         async function deleteDamage(id, plate) {
             if (!confirm("Bu hasar kaydını silmek istediğinize emin misiniz?")) return;
             try {
-                const res = await fetch(`/api/Services/damages/${id}`, { method: 'DELETE' });
+                const res = await fetch(`/api/Services/damages/${id}`, { 
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
                 if (res.ok) {
                     document.getElementById('damageSearchPlate').value = plate;
                     fetchDamages();

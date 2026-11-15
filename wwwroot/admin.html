@@ -1567,9 +1567,10 @@
                 tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">Kayıtlı parça bulunamadı.</td></tr>`;
             } else {
                 items.forEach(item => {
-                    const cost = (item.purchasePrice || 0) * (item.quantity || 0);
+                    const qty = item.quantity || 0;
+                    const cost = (item.purchasePrice || 0) * qty;
                     totalCost += cost;
-                    if ((item.quantity || 0) <= 5) criticalCount++;
+                    if (qty <= 5) criticalCount++;
 
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-800/80 transition-all border-b border-slate-800/50">
@@ -1580,9 +1581,20 @@
                                 <span class="text-emerald-400 font-bold">${item.salePrice}₺</span>
                             </td>
                             <td class="p-3 text-center">
-                                <span class="${(item.quantity || 0) <= 5 ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'} border px-2 py-1 rounded font-bold">
-                                    ${item.quantity} Adet
-                                </span>
+                                <div class="inline-flex items-center space-x-1.5 bg-slate-950 border border-slate-800 rounded-lg p-1">
+                                    <button onclick="updateStockQuantity(${item.id}, ${qty}, -1)" 
+                                        class="w-6 h-6 flex items-center justify-center rounded bg-slate-800 hover:bg-red-500/20 hover:text-red-400 text-slate-300 transition-all disabled:opacity-40"
+                                        ${qty <= 0 ? 'disabled' : ''}>
+                                        <i class="fa-solid fa-minus text-[10px]"></i>
+                                    </button>
+                                    <span class="${qty <= 5 ? 'text-red-400' : 'text-emerald-400'} px-2 font-bold min-w-[62px] text-center">
+                                        ${qty} Adet
+                                    </span>
+                                    <button onclick="updateStockQuantity(${item.id}, ${qty}, 1)" 
+                                        class="w-6 h-6 flex items-center justify-center rounded bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-400 text-slate-300 transition-all">
+                                        <i class="fa-solid fa-plus text-[10px]"></i>
+                                    </button>
+                                </div>
                             </td>
                             <td class="p-3 text-right">
                                 <button onclick="deleteStockItem(${item.id})" class="text-red-400 hover:text-red-300 transition-all">
@@ -1599,6 +1611,27 @@
                 cards[0].innerText = items.length;
                 cards[1].innerText = criticalCount;
                 cards[2].innerText = `${totalCost.toLocaleString('tr-TR')} ₺`;
+            }
+        }
+
+        async function updateStockQuantity(id, currentQty, delta) {
+            const newQty = (currentQty || 0) + delta;
+            if (newQty < 0) return;
+
+            try {
+                const res = await fetch(`/api/Services/update-stock/${id}`, {
+                    method: 'PATCH',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(newQty)
+                });
+
+                if (res.ok) {
+                    fetchStockItems();
+                } else {
+                    alert("Stok adedi güncellenemedi.");
+                }
+            } catch (err) {
+                alert("Bağlantı hatası: " + err.message);
             }
         }
 

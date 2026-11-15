@@ -242,13 +242,48 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Marka</label>
-                                <input type="text" id="marka" placeholder="Peugeot" required
+                                <input type="text" id="marka" list="carBrandsList" placeholder="Peugeot" required
                                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-blue-500 focus:outline-none">
+                                <datalist id="carBrandsList">
+                                    <option value="Peugeot">
+                                    <option value="BMW">
+                                    <option value="Renault">
+                                    <option value="Audi">
+                                    <option value="Volkswagen">
+                                    <option value="Mercedes-Benz">
+                                    <option value="Ford">
+                                    <option value="Fiat">
+                                    <option value="Toyota">
+                                    <option value="Honda">
+                                    <option value="Hyundai">
+                                    <option value="Kia">
+                                    <option value="Skoda">
+                                    <option value="Seat">
+                                    <option value="Nissan">
+                                    <option value="Volvo">
+                                    <option value="Opel">
+                                    <option value="Dacia">
+                                    <option value="Chevrolet">
+                                    <option value="Citroen">
+                                    <option value="Alfa Romeo">
+                                    <option value="Jeep">
+                                    <option value="Land Rover">
+                                    <option value="Porsche">
+                                    <option value="Subaru">
+                                    <option value="Suzuki">
+                                    <option value="Mazda">
+                                    <option value="Mitsubishi">
+                                    <option value="Tesla">
+                                    <option value="Togg">
+                                </datalist>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Model</label>
-                                <input type="text" id="model" placeholder="408" required
+                                <input type="text" id="model" list="carModelsList" placeholder="408, 320d..." required
                                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-blue-500 focus:outline-none">
+                                <datalist id="carModelsList">
+                                    <!-- Markaya göre dinamik dolacak -->
+                                </datalist>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
@@ -823,6 +858,46 @@
         let currentShopId = sessionStorage.getItem("shopId") || null;
         let shopData = { shopName: "OtoServis Pro", phone: "", address: "", iban: "", logoUrl: "" };
 
+        // Marka - Model Sözlüğü (Dinamik Öneri İçin)
+        const carBrandModels = {
+            "Peugeot": ["208", "308", "408", "3008", "5008", "Rifter", "Partner"],
+            "BMW": ["1 Serisi", "2 Serisi", "3 Serisi (F30)", "4 Serisi", "5 Serisi (F10)", "7 Serisi", "X1", "X3", "X5", "M3", "M4"],
+            "Renault": ["Clio", "Megane", "Megane 2", "Captur", "Austral", "Talisman", "Symbol", "Fluence", "Koleos"],
+            "Audi": ["A1", "A3", "A4", "A5", "A6", "Q2", "Q3", "Q5", "Q7", "RS6"],
+            "Volkswagen": ["Polo", "Golf", "Passat", "Tiguan", "T-Roc", "Arteon", "Transporter", "Caddy"],
+            "Mercedes-Benz": ["A Serisi", "C Serisi (C180)", "E Serisi", "S Serisi", "CLA", "GLA", "GLC", "G Serisi"],
+            "Ford": ["Fiesta", "Focus", "Puma", "Kuga", "Mondeo", "Transit", "Ranger"],
+            "Fiat": ["Egea", "Linea", "Punto", "Fiorino", "Doblo", "Tipo", "Ducato"],
+            "Toyota": ["Corolla", "Yaris", "C-HR", "RAV4", "Camry", "Hilux"],
+            "Honda": ["Civic", "HR-V", "CR-V", "Jazz"],
+            "Hyundai": ["i20", "i30", "Elantra", "Tucson", "Bayon", "Kona"],
+            "Kia": ["Rio", "Ceed", "Sportage", "Picanto", "Stonic"],
+            "Skoda": ["Fabia", "Octavia", "Superb", "Kamiq", "Karoq", "Kodiaq"],
+            "Seat": ["Ibiza", "Leon", "Ateca", "Arona"],
+            "Nissan": ["Micra", "Juke", "Qashqai", "X-Trail"],
+            "Volvo": ["S60", "S90", "XC40", "XC60", "XC90"],
+            "Opel": ["Corsa", "Astra", "Insignia", "Mokka", "Crossland"],
+            "Dacia": ["Sandero", "Duster", "Jogger", "Lodgy"],
+            "Citroen": ["C3", "C4", "C5 Aircross", "Berlingo"],
+            "Tesla": ["Model S", "Model 3", "Model X", "Model Y"],
+            "Togg": ["T10X"]
+        };
+
+        // Marka seçildiğinde/yazıldığında modelleri otomatik dolduran dinleyici
+        document.getElementById('marka').addEventListener('input', function(e) {
+            const selectedBrand = e.target.value.trim();
+            const modelDatalist = document.getElementById('carModelsList');
+            modelDatalist.innerHTML = ''; 
+
+            if (carBrandModels[selectedBrand]) {
+                carBrandModels[selectedBrand].forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    modelDatalist.appendChild(option);
+                });
+            }
+        });
+
         function getAuthHeaders() {
             const token = sessionStorage.getItem("jwtToken");
             return {
@@ -1184,9 +1259,8 @@
 
             let rawRecords = currentVehicleData.serviceRecords || currentVehicleData.ServiceRecords || [];
 
-            // KESİN ÇÖZÜM: Takvim gününe göre tekilleştirme (Deduplication) ve BUGÜNÜN (15.11.2026) garantilenmesi
             const dateMap = new Map();
-            const todayStr = new Date().toISOString().split('T')[0]; // Bugünün tarihi (YYYY-MM-DD)
+            const todayStr = new Date().toISOString().split('T')[0];
 
             rawRecords.forEach(r => {
                 const dateRaw = r.entryDate || r.EntryDate || r.date || r.Date || Date.now();
@@ -1209,7 +1283,6 @@
 
             let records = Array.from(dateMap.values());
 
-            // Eğer veritabanından gelen geçmişte BUGÜNE ait kayıt yoksa, anlık olarak bugünün tarihiyle yeni kayıt simüle edip ekliyoruz!
             let todayRec = records.find(r => {
                 const dKey = new Date(r.entryDate || r.EntryDate || Date.now()).toISOString().split('T')[0];
                 return dKey === todayStr;
@@ -1257,7 +1330,6 @@
                 itemListDiv.innerHTML = `<div class="text-xs text-slate-500 py-1">Bugünkü kayda ait henüz parça/işçilik eklenmedi.</div>`;
             }
 
-            // Geçmiş arşiv modalı (en yeniler üstte)
             const modalHistoryList = document.getElementById('modalHistoryList');
             modalHistoryList.innerHTML = '';
 
@@ -1632,12 +1704,12 @@
             document.getElementById('finTotalExpense').innerText = `${totalExpense.toLocaleString('tr-TR')} ₺`;
             
             document.getElementById('finTodayIncome').innerText = `${todayIncome.toLocaleString('tr-TR')} ₺`;
-            document.getElementById('finTodayExpense').innerText = `${todayIncome.toLocaleString('tr-TR')} ₺`;
+            document.getElementById('finTodayExpense').innerText = `${todayExpense.toLocaleString('tr-TR')} ₺`;
             
             const dashTodayInc = document.getElementById('dashTodayIncome');
             const dashTodayExp = document.getElementById('dashTodayExpense');
             if (dashTodayInc) dashTodayInc.innerText = `${todayIncome.toLocaleString('tr-TR')} ₺`;
-            if (dashTodayExp) dashTodayExp.innerText = `${todayIncome.toLocaleString('tr-TR')} ₺`;
+            if (dashTodayExp) dashTodayExp.innerText = `${todayExpense.toLocaleString('tr-TR')} ₺`;
         }
 
         async function handleAddFinance(e) {

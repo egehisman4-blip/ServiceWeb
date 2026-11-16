@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OtoServis Pro - Patron Yönetim Paneli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 min-h-screen text-slate-100 font-sans">
+
+    <!-- PATRON GİRİŞ MODALI -->
+    <div id="masterLoginOverlay" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="bg-amber-500/20 text-amber-400 border border-amber-500/30 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fa-solid fa-crown text-xl"></i>
+                </div>
+                <h2 class="text-xl font-bold text-white">Patron Paneli</h2>
+                <p class="text-xs text-slate-400 mt-1">Dükkan ve abonelik yönetimi için anahtar şifreyi girin.</p>
+            </div>
+            <form onsubmit="handleMasterLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Master Key</label>
+                    <input type="password" id="masterKeyInput" placeholder="••••••••••••" required
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:border-amber-500 focus:outline-none text-center tracking-wider">
+                </div>
+                <div id="masterLoginError" class="hidden text-red-400 text-xs text-center font-medium">
+                    Hatalı anahtar şifre!
+                </div>
+                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl transition-all shadow-lg shadow-amber-500/20">
+                    Yönetim Paneline Gir
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ÜST BAR -->
+    <header class="bg-slate-900 border-b border-slate-800 px-4 md:px-8 py-4 flex flex-wrap justify-between items-center gap-3">
+        <div class="flex items-center space-x-3">
+            <div class="bg-amber-500/20 text-amber-400 border border-amber-500/30 p-2.5 rounded-xl">
+                <i class="fa-solid fa-crown text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-base text-white">OTO SERVİS PRO — PATRON PANELİ</h1>
+                <p class="text-xs text-slate-400">SaaS Dükkan & Lisans Süresi Kontrol Merkezi</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="loadAllShops()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs font-semibold transition-all">
+                <i class="fa-solid fa-rotate mr-1"></i> Yenile
+            </button>
+            <button onclick="masterLogout()" class="bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all">
+                <i class="fa-solid fa-right-from-bracket mr-1"></i> Çıkış
+            </button>
+        </div>
+    </header>
+
+    <!-- ANA İÇERİK -->
+    <main class="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
+
+        <!-- ÖZET KARTLAR -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+                <div class="text-xs text-slate-400 font-bold uppercase mb-1">Toplam Dükkan</div>
+                <div class="text-2xl font-black text-white" id="statTotalShops">0</div>
+            </div>
+            <div class="bg-slate-900 border border-emerald-500/30 p-5 rounded-2xl">
+                <div class="text-xs text-emerald-400 font-bold uppercase mb-1">Aktif Lisanslı</div>
+                <div class="text-2xl font-black text-white" id="statActiveShops">0</div>
+            </div>
+            <div class="bg-slate-900 border border-red-500/30 p-5 rounded-2xl">
+                <div class="text-xs text-red-400 font-bold uppercase mb-1">Süresi Dolan / Pasif</div>
+                <div class="text-2xl font-black text-white" id="statExpiredShops">0</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- SOL: YENİ DÜKKAN OLUŞTURMA -->
+            <div class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-6 h-fit">
+                <h2 class="text-base font-bold text-white mb-4 flex items-center">
+                    <i class="fa-solid fa-store text-emerald-400 mr-2"></i>Yeni Dükkan Aç
+                </h2>
+                <form onsubmit="handleRegisterShop(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Dükkan Kodu (Giriş ID)</label>
+                        <input type="text" id="newShopCode" placeholder="Örn: yildizoto" required
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white lowercase font-bold focus:border-amber-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Dükkan / Servis Adı</label>
+                        <input type="text" id="newShopName" placeholder="Örn: Yıldız Otomotiv" required
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white focus:border-amber-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Giriş Şifresi</label>
+                        <input type="text" id="newShopPassword" placeholder="Örn: 123456" required
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white focus:border-amber-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Dükkan Telefonu</label>
+                        <input type="text" id="newShopPhone" placeholder="Örn: 05551112233"
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white focus:border-amber-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Başlangıç Paketi</label>
+                        <select id="newShopInitialPlan" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:border-amber-500 focus:outline-none">
+                            <option value="7">7 Gün Ücretsiz Deneme (Trial)</option>
+                            <option value="30">30 Günlük Paket (Aylık)</option>
+                            <option value="365">365 Günlük Paket (Yıllık)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-emerald-600/20">
+                        Dükkanı Oluştur
+                    </button>
+                </form>
+            </div>
+
+            <!-- SAĞ: DÜKKAN LİSTESİ & SÜRE UZATMA -->
+            <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
+                    <h2 class="text-base font-bold text-white flex items-center">
+                        <i class="fa-solid fa-list-check text-amber-400 mr-2"></i>Kayıtlı Dükkanlar & Abonelikler
+                    </h2>
+                    <input type="text" id="shopFilterInput" oninput="filterShops()" placeholder="Dükkan kodu veya adı ara..."
+                        class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-amber-500 focus:outline-none w-full sm:w-60">
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-slate-950 text-slate-400 uppercase font-semibold">
+                            <tr>
+                                <th class="p-3">Dükkan</th>
+                                <th class="p-3">Durum & Paket</th>
+                                <th class="p-3">Bitiş / Kalan</th>
+                                <th class="p-3 text-right">Hızlı İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shopsTableBody" class="divide-y divide-slate-800">
+                            <tr><td colspan="4" class="p-4 text-center text-slate-500">Yükleniyor...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        let masterKey = sessionStorage.getItem("superAdminKey") || "";
+        let allShopsCache = [];
+
+        window.onload = function () {
+            if (masterKey) {
+                verifyAndLoad();
+            }
+        };
+
+        async function handleMasterLogin(e) {
+            e.preventDefault();
+            masterKey = document.getElementById("masterKeyInput").value.trim();
+            await verifyAndLoad(true);
+        }
+
+        async function verifyAndLoad(fromForm = false) {
+            try {
+                const res = await fetch(`/api/Services/admin/all-shops?masterKey=${encodeURIComponent(masterKey)}`);
+                if (res.ok) {
+                    sessionStorage.setItem("superAdminKey", masterKey);
+                    document.getElementById("masterLoginOverlay").classList.add("hidden");
+                    document.getElementById("masterLoginError").classList.add("hidden");
+                    allShopsCache = await res.json();
+                    renderShops(allShopsCache);
+                } else {
+                    sessionStorage.removeItem("superAdminKey");
+                    if (fromForm) {
+                        document.getElementById("masterLoginError").classList.remove("hidden");
+                    }
+                }
+            } catch (err) {
+                alert("Sunucu bağlantı hatası: " + err.message);
+            }
+        }
+
+        function masterLogout() {
+            sessionStorage.removeItem("superAdminKey");
+            location.reload();
+        }
+
+        async function loadAllShops() {
+            try {
+                const res = await fetch(`/api/Services/admin/all-shops?masterKey=${encodeURIComponent(masterKey)}`);
+                if (res.ok) {
+                    allShopsCache = await res.json();
+                    filterShops();
+                }
+            } catch (err) {
+                alert("Liste yenilenemedi.");
+            }
+        }
+
+        function filterShops() {
+            const q = document.getElementById("shopFilterInput").value.trim().toLowerCase();
+            if (!q) {
+                renderShops(allShopsCache);
+                return;
+            }
+            const filtered = allShopsCache.filter(s =>
+                (s.shopCode || "").toLowerCase().includes(q) ||
+                (s.shopName || "").toLowerCase().includes(q)
+            );
+            renderShops(filtered);
+        }
+
+        function renderShops(shops) {
+            const tbody = document.getElementById("shopsTableBody");
+            tbody.innerHTML = "";
+
+            let activeCount = 0;
+            let expiredCount = 0;
+
+            allShopsCache.forEach(s => {
+                if (s.isActive && s.remainingDays > 0) activeCount++;
+                else expiredCount++;
+            });
+
+            document.getElementById("statTotalShops").innerText = allShopsCache.length;
+            document.getElementById("statActiveShops").innerText = activeCount;
+            document.getElementById("statExpiredShops").innerText = expiredCount;
+
+            if (shops.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">Kayıtlı dükkan bulunamadı.</td></tr>`;
+                return;
+            }
+
+            shops.forEach(s => {
+                const isValid = s.isActive && s.remainingDays > 0;
+                const endDateStr = new Date(s.subscriptionEndDate).toLocaleDateString("tr-TR");
+
+                const statusBadge = !s.isActive
+                    ? `<span class="bg-slate-700 text-slate-300 px-2 py-0.5 rounded font-bold text-[10px]">PASİF</span>`
+                    : (s.remainingDays <= 0
+                        ? `<span class="bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded font-bold text-[10px]">SÜRESİ DOLDU</span>`
+                        : (s.remainingDays <= 5
+                            ? `<span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded font-bold text-[10px]">SON ${s.remainingDays} GÜN</span>`
+                            : `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded font-bold text-[10px]">AKTİF (${s.remainingDays} GÜN)</span>`));
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/70 transition-all">
+                        <td class="p-3">
+                            <div class="font-mono font-bold text-amber-400 uppercase">${s.shopCode}</div>
+                            <div class="font-semibold text-white">${s.shopName || "-"}</div>
+                            <div class="text-[11px] text-slate-400">${s.phone || ""}</div>
+                        </td>
+                        <td class="p-3 space-y-1">
+                            <div>${statusBadge}</div>
+                            <div class="text-[11px] text-slate-400">Paket: <strong class="text-slate-200">${s.planType || "Standard"}</strong></div>
+                        </td>
+                        <td class="p-3 font-mono">
+                            <div class="text-slate-300">${endDateStr}</div>
+                            <div class="text-[11px] ${isValid ? 'text-emerald-400' : 'text-red-400'} font-bold">
+                                ${s.remainingDays > 0 ? s.remainingDays + ' gün kaldı' : 'Süre bitti'}
+                            </div>
+                        </td>
+                        <td class="p-3 text-right">
+                            <div class="flex flex-wrap justify-end gap-1.5">
+                                <button onclick="extendShop('${s.shopCode}', 30, 'Aylık')"
+                                    class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1.5 rounded-lg text-[11px] transition-all">
+                                    +30 Gün
+                                </button>
+                                <button onclick="extendShop('${s.shopCode}', 365, 'Yıllık')"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-2.5 py-1.5 rounded-lg text-[11px] transition-all">
+                                    +365 Gün
+                                </button>
+                                <button onclick="customExtendShop('${s.shopCode}')"
+                                    class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold px-2.5 py-1.5 rounded-lg text-[11px] transition-all" title="Özel Gün Ekle">
+                                    +Gün
+                                </button>
+                                ${s.isActive ? `
+                                <button onclick="suspendShop('${s.shopCode}')"
+                                    class="bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 font-semibold px-2.5 py-1.5 rounded-lg text-[11px] transition-all" title="Dükkanı Askıya Al">
+                                    Kilitle
+                                </button>` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function extendShop(shopCode, daysToAdd, planType) {
+            if (!confirm(`${shopCode.toUpperCase()} dükkanına +${daysToAdd} gün (${planType}) eklensin mi?`)) return;
+
+            try {
+                const res = await fetch("/api/Services/admin/extend-subscription", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        masterKey: masterKey,
+                        shopCode: shopCode,
+                        daysToAdd: daysToAdd,
+                        planType: planType
+                    })
+                });
+
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    alert(data.message || "Abonelik güncellendi!");
+                    loadAllShops();
+                } else {
+                    alert(data.message || "Güncelleme başarısız.");
+                }
+            } catch (err) {
+                alert("Bağlantı hatası: " + err.message);
+            }
+        }
+
+        function customExtendShop(shopCode) {
+            const input = prompt(`${shopCode.toUpperCase()} dükkanına kaç gün eklemek istiyorsunuz?`, "15");
+            if (!input) return;
+            const days = parseInt(input);
+            if (isNaN(days) || days <= 0) {
+                alert("Geçerli bir gün sayısı girin.");
+                return;
+            }
+            extendShop(shopCode, days, days >= 300 ? "Yıllık" : (days >= 28 ? "Aylık" : "Özel"));
+        }
+
+        async function suspendShop(shopCode) {
+            if (!confirm(`${shopCode.toUpperCase()} dükkanını pasife alıp girişini kilitlemek istediğinize emin misiniz?`)) return;
+
+            try {
+                const res = await fetch("/api/Services/admin/extend-subscription", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        masterKey: masterKey,
+                        shopCode: shopCode,
+                        daysToAdd: 0,
+                        planType: "Suspended"
+                    })
+                });
+
+                if (res.ok) {
+                    alert("Dükkan pasife alındı.");
+                    loadAllShops();
+                }
+            } catch (err) {
+                alert("Hata oluştu.");
+            }
+        }
+
+        async function handleRegisterShop(e) {
+            e.preventDefault();
+            const shopCode = document.getElementById("newShopCode").value.trim().toLowerCase();
+            const shopName = document.getElementById("newShopName").value.trim();
+            const passwordHash = document.getElementById("newShopPassword").value.trim();
+            const phone = document.getElementById("newShopPhone").value.trim();
+            const initialDays = parseInt(document.getElementById("newShopInitialPlan").value);
+
+            try {
+                const res = await fetch("/api/Services/register-shop", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        shopCode: shopCode,
+                        shopName: shopName,
+                        passwordHash: passwordHash,
+                        phone: phone,
+                        address: "",
+                        iban: "",
+                        logoUrl: ""
+                    })
+                });
+
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    alert(data.message || "Dükkan oluşturulamadı.");
+                    return;
+                }
+
+                // Varsayılan 7 gün üzerine seçilen paket gün farkını otomatik ekle
+                if (initialDays > 7) {
+                    const extraDays = initialDays - 7;
+                    const planName = initialDays >= 365 ? "Yıllık" : "Aylık";
+                    await fetch("/api/Services/admin/extend-subscription", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            masterKey: masterKey,
+                            shopCode: shopCode,
+                            daysToAdd: extraDays,
+                            planType: planName
+                        })
+                    });
+                }
+
+                alert(`${shopName} (${shopCode.toUpperCase()}) başarıyla açıldı!`);
+                e.target.reset();
+                loadAllShops();
+            } catch (err) {
+                alert("Bağlantı hatası: " + err.message);
+            }
+        }
+    </script>
+</body>
+</html>

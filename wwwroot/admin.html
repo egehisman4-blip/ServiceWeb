@@ -76,7 +76,7 @@
     </div>
 
     <!-- SOL SIDEBAR MENÜ -->
-    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex-shrink-0 flex flex-col justify-between min-h-screen">
+    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex-shrink-0 flex flex-col justify-between md:min-h-screen">
         <div class="p-4 space-y-5 overflow-y-auto max-h-screen">
             <!-- Dükkan Logosu & Başlık -->
             <div class="flex items-center space-x-3 border-b border-slate-800 pb-4">
@@ -555,7 +555,7 @@
                                 <option value="Göçük">Göçük</option>
                                 <option value="Boya Atması">Boya Atması</option>
                                 <option value="Kırık / Çatlak">Kırık / Çatlak</option>
-                                <option value="Ezük">Ezük</option>
+                                <option value="Ezik">Ezik</option>
                             </select>
                         </div>
                         <div>
@@ -884,7 +884,7 @@
 
     <script>
         // KENDİ TELEFON NUMARANI BURAYA YAZ (Abonelik yenileme WhatsApp mesajları buraya düşecek)
-        const SUPPORT_PHONE = "905XXXXXXXXX";
+        const SUPPORT_PHONE = "905528674965";
 
         const baseUrl = window.location.origin;
         let currentShopId = sessionStorage.getItem("shopId") || null;
@@ -895,7 +895,7 @@
             "Peugeot": ["208", "308", "408", "3008", "5008", "Rifter", "Partner"],
             "BMW": ["1 Serisi", "2 Serisi", "3 Serisi", "4 Serisi", "5 Serisi", "7 Serisi", "X1", "X3", "X5", "M3", "M4"],
             "Renault": ["Clio", "Megane", "Megane 2", "Captur", "Austral", "Talisman", "Symbol", "Fluence", "Koleos"],
-            "Audi": ["A1", "A3", "A4", "A5", "A6", "A7" , "A8" , "Q2", "Q3", "Q5", "Q7", "Q8" , "RS6"],
+            "Audi": ["A1", "A3", "A4", "A5", "A6", "A7", "A8", "Q2", "Q3", "Q5", "Q7", "Q8", "RS6"],
             "Volkswagen": ["Polo", "Golf", "Passat", "Tiguan", "T-Roc", "Arteon", "Transporter", "Caddy"],
             "Mercedes-Benz": ["A Serisi", "C Serisi", "E Serisi", "S Serisi", "CLA", "GLA", "GLC", "G Serisi"],
             "Ford": ["Fiesta", "Focus", "Puma", "Kuga", "Mondeo", "Transit", "Ranger"],
@@ -912,7 +912,7 @@
             "Dacia": ["Sandero", "Duster", "Jogger", "Lodgy"],
             "Citroen": ["C3", "C4", "C5 Aircross", "Berlingo"],
             "Tesla": ["Model S", "Model 3", "Model X", "Model Y"],
-            "Togg": ["T10X" , "T10F"]
+            "Togg": ["T10X", "T10F"]
         };
 
         // Marka seçildiğinde/yazıldığında modelleri otomatik dolduran dinleyici
@@ -951,10 +951,15 @@
                     badge.className = "inline-block bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-bold px-2 py-0.5 rounded";
                     const banner = document.getElementById("subWarningBanner");
                     banner.classList.remove("hidden");
-                    document.getElementById("subWarningText").innerHTML = `<strong>Dikkat:</strong> Aboneliğinizin bitmesine <strong>${days} gün</strong> kaldı. Kesintisiz kullanım için sürenizi uzatın.`;
+                    document.getElementById("subWarningText").innerHTML = days <= 0
+                        ? `<strong>Dikkat:</strong> Aboneliğiniz <strong>bugün</strong> sona eriyor. Kesintisiz kullanım için sürenizi uzatın.`
+                        : `<strong>Dikkat:</strong> Aboneliğinizin bitmesine <strong>${days} gün</strong> kaldı. Kesintisiz kullanım için sürenizi uzatın.`;
 
                     const wpMsg = `Merhaba, ${sCode} dükkan kodlu OtoServis Pro aboneliğimi uzatmak istiyorum.`;
                     document.getElementById("bannerRenewBtn").href = `https://api.whatsapp.com/send?phone=${SUPPORT_PHONE}&text=${encodeURIComponent(wpMsg)}`;
+                } else {
+                    badge.className = "inline-block bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold px-2 py-0.5 rounded";
+                    document.getElementById("subWarningBanner").classList.add("hidden");
                 }
             }
         }
@@ -1231,6 +1236,11 @@
             let phone = (phoneRaw || '').replace(/\D/g, '');
             if (phone.startsWith('0')) phone = '90' + phone.substring(1);
             if (!phone.startsWith('90')) phone = '90' + phone;
+
+            if (phone.length < 12) {
+                alert("Müşterinin telefon numarası eksik veya hatalı!");
+                return;
+            }
 
             const trackUrl = `${baseUrl}/index.html?plate=${encodeURIComponent(plate)}&shopId=${currentShopId}`;
             const senderName = shopData.shopName || shopData.ShopName || "OtoServis Pro";
@@ -1556,6 +1566,11 @@
             if (phone.startsWith('0')) phone = '90' + phone.substring(1);
             if (!phone.startsWith('90')) phone = '90' + phone;
 
+            if (phone.length < 12) {
+                alert("Müşterinin telefon numarası eksik veya hatalı!");
+                return;
+            }
+
             const trackUrl = `${baseUrl}/index.html?plate=${encodeURIComponent(plate)}&shopId=${currentShopId}`;
             const senderName = shopData.shopName || shopData.ShopName || "OtoServis Pro";
 
@@ -1567,7 +1582,8 @@
         function downloadPDF() {
             if (!currentVehicleData) return;
             const records = currentVehicleData.serviceRecords || currentVehicleData.ServiceRecords || [];
-            const lastRec = records.length > 0 ? records[records.length - 1] : {};
+            const lastRec = records.find(r => (r.id || r.Id) === currentRecordId) 
+                         || (records.length > 0 ? records[records.length - 1] : {});
 
             const activeShopName = shopData.shopName || shopData.ShopName || "OTOSERVİS PRO";
             const activeAddress = shopData.address || shopData.Address || "Teknik Servis & Bakım İş Emri Formu";

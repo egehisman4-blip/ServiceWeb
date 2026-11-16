@@ -16,7 +16,7 @@ namespace mepa_servis.Controllers
             _context = context;
         }
 
-        // --- 1. DÜKKAN GİRİŞİ (LOGIN) --- //
+        // --- 1. DÜKKAN GİRİŞİ (LOGIN + ABONELİK KONTROLÜ) --- //
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
@@ -34,7 +34,28 @@ namespace mepa_servis.Controllers
                 return Unauthorized(new { message = "Hatalı dükkan kodu veya şifre!" });
             }
 
-            return Ok(new { message = "Giriş başarılı", shopId = shop.Id, shopName = shop.ShopName });
+            // ABONELİK SÜRE VE AKTİFLİK KONTROLÜ
+            if (!shop.IsActive || DateTime.UtcNow > shop.SubscriptionEndDate)
+            {
+                return StatusCode(403, new
+                {
+                    expired = true,
+                    message = "Abonelik süreniz dolmuştur. Kullanıma devam etmek için aboneliğinizi yenileyin.",
+                    endDate = shop.SubscriptionEndDate
+                });
+            }
+
+            var remainingDays = (int)Math.Ceiling((shop.SubscriptionEndDate - DateTime.UtcNow).TotalDays);
+
+            return Ok(new
+            {
+                message = "Giriş başarılı",
+                shopId = shop.Id,
+                shopName = shop.ShopName,
+                remainingDays = remainingDays,
+                planType = shop.PlanType,
+                subscriptionEndDate = shop.SubscriptionEndDate
+            });
         }
 
         // --- 2. YENİ DÜKKAN KAYIT (SÜPER ADMIN) --- //
@@ -54,6 +75,10 @@ namespace mepa_servis.Controllers
             }
 
             newShop.ShopCode = cleanCode;
+            newShop.SubscriptionEndDate = DateTime.UtcNow.AddDays(7); // Varsayılan 7 gün deneme
+            newShop.PlanType = "Trial";
+            newShop.IsActive = true;
+
             _context.Shops.Add(newShop);
             await _context.SaveChangesAsync();
 
@@ -96,14 +121,12 @@ namespace mepa_servis.Controllers
             vehicle.CurrentKm = vehicle.CurrentKm > 0 ? vehicle.CurrentKm : 0;
             vehicle.LastKmUpdateDate = DateTime.Now;
 
-            // Sadece plakaya göre kontrol et (Mükerrer kaydı ve hata patlamasını önler)
             var existingVehicle = await _context.Vehicles
                 .Include(v => v.ServiceRecords)
                 .FirstOrDefaultAsync(v => v.Plate == vehicle.Plate);
 
             if (existingVehicle != null)
             {
-                // Araç zaten varsa dükkanını güncelle ve yeni servis kaydı aç
                 existingVehicle.ShopId = vehicle.ShopId;
                 
                 var newRecord = new ServiceRecord
@@ -122,7 +145,6 @@ namespace mepa_servis.Controllers
                 return Ok(new { message = "Mevcut araca yeni servis kaydı açıldı.", vehicleId = existingVehicle.Id });
             }
 
-            // İlk servis kaydını otomatik aç
             var initialRecord = new ServiceRecord
             {
                 EntryDate = DateTime.Now,
@@ -137,12 +159,12 @@ namespace mepa_servis.Controllers
 
             return Ok(new { message = "Araç başarıyla kaydedildi.", vehicleId = vehicle.Id });
         }
+
         [HttpGet("search/{plate}")]
         public async Task<IActionResult> SearchVehicle(string plate, [FromQuery] int shopId)
         {
             var cleanPlate = plate.Trim().ToUpper();
             
-            // Sadece ilgili dükkana (shopId) ait aracı ve servis kayıtlarını getiriyoruz!
             var vehicle = await _context.Vehicles
                 .Include(v => v.ServiceRecords)
                     .ThenInclude(sr => sr.ServiceItems.Where(si => !si.IsDeleted))
@@ -153,7 +175,6 @@ namespace mepa_servis.Controllers
                 return NotFound(new { message = "Bu plaka bu dükkanda bulunamadı." });
             }
 
-            // Bugünün servis kaydı kontrolü (Bugün için yoksa otomatik açar)
             var today = DateTime.Today;
             var todayRecord = vehicle.ServiceRecords?
                 .FirstOrDefault(sr => sr.EntryDate.Date == today);
@@ -175,7 +196,6 @@ namespace mepa_servis.Controllers
 
             return Ok(vehicle);
         }
-        
 
         [HttpGet("upcoming-maintenances")]
         public async Task<IActionResult> GetUpcomingMaintenances([FromQuery] int shopId)
@@ -183,7 +203,7 @@ namespace mepa_servis.Controllers
             var list = await _context.Vehicles
                 .Where(v => v.ShopId == shopId)
                 .Include(v => v.ServiceRecords)
-                    .ThenInclude(sr => sr.ServiceItems.Where(si => !si.IsDeleted)) // Silinen parçaları filtrele
+                    .ThenInclude(sr => sr.ServiceItems.Where(si => !si.IsDeleted))
                 .OrderByDescending(v => v.Id)
                 .ToListAsync();
 
@@ -239,18 +259,15 @@ namespace mepa_servis.Controllers
             var item = await _context.ServiceItems.FindAsync(id);
             if (item == null) return NotFound();
 
-            // Parçayı arşive kaldır (Soft Delete)
             item.IsDeleted = true;
             await _context.SaveChangesAsync();
 
-            // İlgili servis kaydını ve aktif kalan parçalarını bul
             var record = await _context.ServiceRecords
                 .Include(r => r.ServiceItems)
                 .FirstOrDefaultAsync(r => r.Id == item.ServiceRecordId);
 
             if (record != null)
             {
-                // Toplam tutarı silinmeyen parçalara göre yeniden hesapla
                 record.TotalCost = record.ServiceItems.Where(i => !i.IsDeleted).Sum(i => i.Price);
                 await _context.SaveChangesAsync();
             }
@@ -273,7 +290,6 @@ namespace mepa_servis.Controllers
 
             return Ok(new { message = "Araç ve tüm geçmişi silindi." });
         }
-
 
         // --- 5. STOK YÖNETİMİ (DÜKKAN İZOLELİ) --- //
 
@@ -307,6 +323,7 @@ namespace mepa_servis.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { message = "Stok silindi." });
         }
+
         [HttpPatch("update-stock/{id}")]
         public async Task<IActionResult> UpdateStockQuantity(int id, [FromBody] int newQuantity)
         {
@@ -317,7 +334,6 @@ namespace mepa_servis.Controllers
             await _context.SaveChangesAsync();
             return Ok(item);
         }
-
 
         // --- 6. FİNANS & CİRO YÖNETİMİ (DÜKKAN İZOLELİ) --- //
 
@@ -341,7 +357,6 @@ namespace mepa_servis.Controllers
             await _context.SaveChangesAsync();
             return Ok(record);
         }
-
 
         // --- 7. RANDEVU YÖNETİMİ (DÜKKAN İZOLELİ) --- //
 
@@ -375,7 +390,6 @@ namespace mepa_servis.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { message = "Randevu silindi." });
         }
-
 
         // --- 8. ARAÇ KABUL & ÇİZİK HARİTASI (DÜKKAN İZOLELİ) --- //
 
@@ -413,11 +427,72 @@ namespace mepa_servis.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { message = "Hasar silindi." });
         }
+
+        // --- 9. PATRON PANELİ: ABONELİK YÖNETİMİ --- //
+
+        [HttpPost("admin/extend-subscription")]
+        public async Task<IActionResult> ExtendSubscription([FromBody] ExtendSubRequest req)
+        {
+            if (req.MasterKey != "EgePatron2026!")
+                return Unauthorized(new { message = "Yetkisiz erişim." });
+
+            var shop = await _context.Shops.FirstOrDefaultAsync(s => s.ShopCode.ToLower() == req.ShopCode.Trim().ToLower());
+            if (shop == null)
+                return NotFound(new { message = "Dükkan bulunamadı." });
+
+            var baseDate = shop.SubscriptionEndDate > DateTime.UtcNow ? shop.SubscriptionEndDate : DateTime.UtcNow;
+
+            if (req.DaysToAdd > 0)
+            {
+                shop.SubscriptionEndDate = baseDate.AddDays(req.DaysToAdd);
+                shop.PlanType = req.PlanType;
+                shop.IsActive = true;
+            }
+            else
+            {
+                shop.IsActive = false;
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = $"{shop.ShopName} aboneliği güncellendi.", newEndDate = shop.SubscriptionEndDate });
+        }
+
+        [HttpGet("admin/all-shops")]
+        public async Task<IActionResult> GetAllShops([FromQuery] string masterKey)
+        {
+            if (masterKey != "EgePatron2026!")
+                return Unauthorized();
+
+            var shops = await _context.Shops
+                .Select(s => new
+                {
+                    s.Id,
+                    s.ShopCode,
+                    s.ShopName,
+                    s.Phone,
+                    s.PlanType,
+                    s.IsActive,
+                    s.SubscriptionEndDate,
+                    RemainingDays = (int)Math.Ceiling((s.SubscriptionEndDate - DateTime.UtcNow).TotalDays)
+                })
+                .OrderBy(s => s.RemainingDays)
+                .ToListAsync();
+
+            return Ok(shops);
+        }
     }
 
     public class LoginDto
     {
         public string ShopCode { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+    }
+
+    public class ExtendSubRequest
+    {
+        public string MasterKey { get; set; } = string.Empty;
+        public string ShopCode { get; set; } = string.Empty;
+        public int DaysToAdd { get; set; }
+        public string PlanType { get; set; } = string.Empty;
     }
 }

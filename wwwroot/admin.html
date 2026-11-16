@@ -32,6 +32,19 @@
                         class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:outline-none tracking-widest text-center text-lg">
                 </div>
                 <div id="loginError" class="hidden text-red-400 text-xs text-center font-medium">Hatalı dükkan kodu veya şifre!</div>
+                
+                <!-- ABONELİK SÜRESİ DOLDUĞUNDA ÇIKAN KİLİT & WHATSAPP KUTUSU -->
+                <div id="expiredBox" class="hidden bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center space-y-3">
+                    <div class="text-red-400 text-xs font-bold leading-relaxed" id="expiredText">
+                        Abonelik süreniz dolmuştur. Kullanıma devam etmek için aboneliğinizi yenileyin.
+                    </div>
+                    <a id="renewWhatsappBtn" href="#" target="_blank"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2.5 px-4 rounded-lg inline-flex items-center justify-center space-x-2 transition-all">
+                        <i class="fa-brands fa-whatsapp text-base"></i>
+                        <span>Aboneliği Yenile (WhatsApp)</span>
+                    </a>
+                </div>
+
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-600/20">
                     Giriş Yap
                 </button>
@@ -72,7 +85,10 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-sm text-white leading-tight" id="sidebarShopTitle">OTO SERVİS PRO</h1>
-                    <span class="inline-block bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-bold px-2 py-0.5 rounded mt-1">SaaS Sürüm</span>
+                    <div class="flex flex-wrap items-center gap-1 mt-1">
+                        <span class="inline-block bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-bold px-2 py-0.5 rounded">SaaS Sürüm</span>
+                        <span id="sidebarSubBadge" class="hidden inline-block bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold px-2 py-0.5 rounded"></span>
+                    </div>
                 </div>
             </div>
 
@@ -162,6 +178,19 @@
 
     <!-- SAĞ İÇERİK ALANI -->
     <main class="flex-1 p-6 md:p-8 space-y-8 overflow-y-auto max-w-7xl">
+
+        <!-- ABONELİK BİTİMİNE SON 5 GÜN KALA ÇIKAN UYARI ŞERİDİ -->
+        <div id="subWarningBanner" class="hidden bg-amber-500/15 border border-amber-500/40 text-amber-200 px-4 py-3 rounded-xl flex flex-wrap justify-between items-center gap-3 text-xs">
+            <div class="flex items-center">
+                <i class="fa-solid fa-triangle-exclamation text-amber-400 text-base mr-2.5"></i>
+                <span id="subWarningText">Aboneliğinizin bitmesine az kaldı.</span>
+            </div>
+            <a id="bannerRenewBtn" href="#" target="_blank"
+                class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3.5 py-1.5 rounded-lg transition-all inline-flex items-center space-x-1.5">
+                <i class="fa-brands fa-whatsapp"></i>
+                <span>Süreyi Uzat</span>
+            </a>
+        </div>
 
         <!-- TAB 1: GENEL BAKIŞ -->
         <section id="tab-dashboard" class="tab-content space-y-6">
@@ -854,6 +883,9 @@
     </div>
 
     <script>
+        // KENDİ TELEFON NUMARANI BURAYA YAZ (Abonelik yenileme WhatsApp mesajları buraya düşecek)
+        const SUPPORT_PHONE = "905XXXXXXXXX";
+
         const baseUrl = window.location.origin;
         let currentShopId = sessionStorage.getItem("shopId") || null;
         let shopData = { shopName: "OtoServis Pro", phone: "", address: "", iban: "", logoUrl: "" };
@@ -906,11 +938,33 @@
             };
         }
 
+        function checkSubscriptionWarning() {
+            const days = parseInt(sessionStorage.getItem("remainingDays"));
+            const sCode = sessionStorage.getItem("shopCode") || "";
+            const badge = document.getElementById("sidebarSubBadge");
+
+            if (!isNaN(days)) {
+                badge.classList.remove("hidden");
+                badge.innerText = `${days} Gün Kaldı`;
+
+                if (days <= 5) {
+                    badge.className = "inline-block bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-bold px-2 py-0.5 rounded";
+                    const banner = document.getElementById("subWarningBanner");
+                    banner.classList.remove("hidden");
+                    document.getElementById("subWarningText").innerHTML = `<strong>Dikkat:</strong> Aboneliğinizin bitmesine <strong>${days} gün</strong> kaldı. Kesintisiz kullanım için sürenizi uzatın.`;
+
+                    const wpMsg = `Merhaba, ${sCode} dükkan kodlu OtoServis Pro aboneliğimi uzatmak istiyorum.`;
+                    document.getElementById("bannerRenewBtn").href = `https://api.whatsapp.com/send?phone=${SUPPORT_PHONE}&text=${encodeURIComponent(wpMsg)}`;
+                }
+            }
+        }
+
         window.onload = function() {
             if (sessionStorage.getItem("shopAuth") === "true" && currentShopId) {
                 document.getElementById("loginOverlay").classList.add("hidden");
                 document.getElementById("customerScreenLink").href = `/index.html?shopId=${currentShopId}`;
                 
+                checkSubscriptionWarning();
                 loadShopSettings();
                 fetchUpcomingMaintenances();
                 loadCustomers();
@@ -946,6 +1000,9 @@
             const shopCode = document.getElementById("loginShopCode").value.trim();
             const password = document.getElementById("adminPassword").value;
 
+            document.getElementById("loginError").classList.add("hidden");
+            document.getElementById("expiredBox").classList.add("hidden");
+
             try {
                 const res = await fetch('/api/Services/login', {
                     method: 'POST',
@@ -957,18 +1014,31 @@
                     const data = await res.json();
                     sessionStorage.setItem("shopAuth", "true");
                     sessionStorage.setItem("shopId", data.shopId);
-                    sessionStorage.setItem("jwtToken", data.token);
+                    sessionStorage.setItem("shopCode", shopCode.toUpperCase());
+                    sessionStorage.setItem("jwtToken", data.token || "");
+                    if (data.remainingDays !== undefined) {
+                        sessionStorage.setItem("remainingDays", data.remainingDays);
+                    }
                     currentShopId = data.shopId;
 
                     document.getElementById("loginOverlay").classList.add("hidden");
                     document.getElementById("customerScreenLink").href = `/index.html?shopId=${currentShopId}`;
 
+                    checkSubscriptionWarning();
                     loadShopSettings();
                     fetchUpcomingMaintenances();
                     loadCustomers();
                     fetchStockItems();
                     fetchFinanceRecords();
                     fetchAppointments();
+                } else if (res.status === 403) {
+                    const errData = await res.json().catch(() => ({}));
+                    document.getElementById("expiredBox").classList.remove("hidden");
+                    if (errData.message) {
+                        document.getElementById("expiredText").innerText = errData.message;
+                    }
+                    const wpMsg = `Merhaba, ${shopCode.toUpperCase()} dükkan kodlu OtoServis Pro aboneliğim sona erdi. Yenilemek istiyorum.`;
+                    document.getElementById("renewWhatsappBtn").href = `https://api.whatsapp.com/send?phone=${SUPPORT_PHONE}&text=${encodeURIComponent(wpMsg)}`;
                 } else {
                     document.getElementById("loginError").classList.remove("hidden");
                 }
@@ -980,7 +1050,9 @@
         function logout() {
             sessionStorage.removeItem("shopAuth");
             sessionStorage.removeItem("shopId");
+            sessionStorage.removeItem("shopCode");
             sessionStorage.removeItem("jwtToken");
+            sessionStorage.removeItem("remainingDays");
             location.reload();
         }
 
@@ -1916,7 +1988,6 @@
 
         async function handleAddDamage(e) {
             e.preventDefault();
-            // Kaydederken de aradaki tüm boşlukları temizliyoruz
             const plate = document.getElementById('damagePlate').value.replace(/\s+/g, '').toUpperCase();
             const region = document.getElementById('damageRegion').value;
             const damageType = document.getElementById('damageType').value;
@@ -1936,7 +2007,6 @@
                     document.getElementById('damagePlate').value = '';
                     document.getElementById('damageDesc').value = '';
                     
-                    // Kayıttan hemen sonra sağdaki tabloyu otomatik getir
                     const searchPlate = document.getElementById('damageSearchPlate');
                     if (searchPlate) {
                         searchPlate.value = plate;
@@ -1949,6 +2019,7 @@
                 alert("Bağlantı hatası.");
             }
         }
+
         async function deleteDamage(id, plate) {
             if (!confirm("Bu hasar kaydını silmek istediğinize emin misiniz?")) return;
             try {

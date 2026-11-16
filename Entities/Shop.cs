@@ -10,5 +10,10 @@ namespace mepa_servis.Entities
         public string Address { get; set; } = string.Empty;
         public string Iban { get; set; } = string.Empty;
         public string LogoUrl { get; set; } = string.Empty;
+
+        // Abonelik Takip Alanları
+        public DateTime SubscriptionEndDate { get; set; } = DateTime.UtcNow.AddDays(7);
+        public string PlanType { get; set; } = "Trial";          // Trial, Monthly, Yearly
+        public bool IsActive { get; set; } = true;
     }
 }

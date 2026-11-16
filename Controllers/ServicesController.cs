@@ -430,10 +430,11 @@ namespace mepa_servis.Controllers
 
         // --- 9. PATRON PANELİ: ABONELİK YÖNETİMİ --- //
 
+
         [HttpPost("admin/extend-subscription")]
         public async Task<IActionResult> ExtendSubscription([FromBody] ExtendSubRequest req)
         {
-            if (req.MasterKey != "EgePatron2026!")
+            if (req == null || string.IsNullOrWhiteSpace(req.MasterKey) || req.MasterKey.Trim() != "EgePatron2026!")
                 return Unauthorized(new { message = "Yetkisiz erişim." });
 
             var shop = await _context.Shops.FirstOrDefaultAsync(s => s.ShopCode.ToLower() == req.ShopCode.Trim().ToLower());
@@ -444,7 +445,7 @@ namespace mepa_servis.Controllers
 
             if (req.DaysToAdd > 0)
             {
-                shop.SubscriptionEndDate = baseDate.AddDays(req.DaysToAdd);
+                shop.SubscriptionEndDate = DateTime.SpecifyKind(baseDate.AddDays(req.DaysToAdd), DateTimeKind.Utc);
                 shop.PlanType = req.PlanType;
                 shop.IsActive = true;
             }
@@ -460,10 +461,12 @@ namespace mepa_servis.Controllers
         [HttpGet("admin/all-shops")]
         public async Task<IActionResult> GetAllShops([FromQuery] string masterKey)
         {
-            if (masterKey != "EGEPATRON2026!")
-                return Unauthorized();
+            if (string.IsNullOrWhiteSpace(masterKey) || masterKey.Trim() != "EgePatron2026!")
+                return Unauthorized(new { message = "Hatalı anahtar şifre!" });
 
-            var shops = await _context.Shops
+            var rawShops = await _context.Shops.ToListAsync();
+
+            var shops = rawShops
                 .Select(s => new
                 {
                     s.Id,
@@ -476,13 +479,11 @@ namespace mepa_servis.Controllers
                     RemainingDays = (int)Math.Ceiling((s.SubscriptionEndDate - DateTime.UtcNow).TotalDays)
                 })
                 .OrderBy(s => s.RemainingDays)
-                .ToListAsync();
+                .ToList();
 
             return Ok(shops);
         }
-    }
-
-    public class LoginDto
+            public class LoginDto
     {
         public string ShopCode { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
@@ -495,4 +496,5 @@ namespace mepa_servis.Controllers
         public int DaysToAdd { get; set; }
         public string PlanType { get; set; } = string.Empty;
     }
+}
 }

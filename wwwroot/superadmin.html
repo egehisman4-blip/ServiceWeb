@@ -162,19 +162,28 @@
             await verifyAndLoad(true);
         }
 
-        async function verifyAndLoad(fromForm = false) {
+       async function verifyAndLoad(fromForm = false) {
+            const errBox = document.getElementById("masterLoginError");
             try {
                 const res = await fetch(`/api/Services/admin/all-shops?masterKey=${encodeURIComponent(masterKey)}`);
                 if (res.ok) {
                     sessionStorage.setItem("superAdminKey", masterKey);
                     document.getElementById("masterLoginOverlay").classList.add("hidden");
-                    document.getElementById("masterLoginError").classList.add("hidden");
+                    errBox.classList.add("hidden");
                     allShopsCache = await res.json();
                     renderShops(allShopsCache);
                 } else {
                     sessionStorage.removeItem("superAdminKey");
                     if (fromForm) {
-                        document.getElementById("masterLoginError").classList.remove("hidden");
+                        if (res.status === 401) {
+                            errBox.innerText = "Hatalı anahtar şifre!";
+                        } else if (res.status === 404) {
+                            errBox.innerText = "API bulunamadı (404). ServicesController.cs sunucuya push edilmemiş.";
+                        } else {
+                            const errText = await res.text().catch(() => "");
+                            errBox.innerText = `Sunucu hatası (${res.status}): ${errText.slice(0, 120)}`;
+                        }
+                        errBox.classList.remove("hidden");
                     }
                 }
             } catch (err) {

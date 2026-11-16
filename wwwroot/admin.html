@@ -7,6 +7,20 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        .car-part {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .car-part:hover {
+            filter: brightness(1.25);
+        }
+        .car-part-selected {
+            stroke: #fbbf24 !important;
+            stroke-width: 3px !important;
+            filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.75));
+        }
+    </style>
 </head>
 <body class="bg-slate-950 min-h-screen text-slate-100 font-sans flex flex-col md:flex-row">
 
@@ -310,9 +324,7 @@
                                 <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Model</label>
                                 <input type="text" id="model" list="carModelsList" placeholder="Örn: Megane, Corolla..." required
                                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-blue-500 focus:outline-none">
-                                <datalist id="carModelsList">
-                                    <!-- Markaya göre dinamik dolacak -->
-                                </datalist>
+                                <datalist id="carModelsList"></datalist>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
@@ -514,82 +526,374 @@
             </div>
         </section>
 
-        <!-- TAB 5: KABUL & ÇİZİK HARİTASI -->
+        <!-- TAB 5: KABUL & ÇİZİK HARİTASI (3D EKSPERTİZ ŞABLONU) -->
         <section id="tab-inspection" class="tab-content hidden space-y-6">
-            <div>
-                <h2 class="text-xl font-bold text-white">Araç Kabul & Çizik Haritası</h2>
-                <p class="text-xs text-slate-400">Araç servise girerken kaporta hasarlarını işaretleyin ve müşteri şikayetlerini kaydedin.</p>
+            <div class="flex flex-wrap justify-between items-center gap-3">
+                <div>
+                    <h2 class="text-xl font-bold text-white">Araç Kabul & 3D Ekspertiz Şablonu</h2>
+                    <p class="text-xs text-slate-400">Araç şablonu üzerinden parçaya tıklayarak boyalı, değişen, çizik veya göçük kaydı oluşturun ve eksper raporunu görüntüleyin.</p>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 p-2 rounded-xl">
+                    <input type="text" id="damageSearchPlate" placeholder="Plaka Sorgula (Örn: 34ABC123)"
+                        onkeydown="if(event.key==='Enter'){event.preventDefault();fetchDamages();}"
+                        class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white uppercase font-bold focus:outline-none focus:border-blue-500 w-48">
+                    <button onclick="fetchDamages()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all">
+                        <i class="fa-solid fa-magnifying-glass mr-1"></i> Getir
+                    </button>
+                </div>
             </div>
             
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Hasar Kayıt Formu -->
-                <div class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-6 h-fit">
-                    <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-clipboard-check text-blue-500 mr-2"></i>Hasar Kaydı Ekle</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- SOL: EKSPER / HASAR KAYIT FORMU -->
+                <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-6 h-fit space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <h3 class="text-base font-bold text-white flex items-center">
+                            <i class="fa-solid fa-clipboard-check text-blue-500 mr-2"></i>Eksper / Hasar Ekle
+                        </h3>
+                        <span id="selectedPartBadge" class="text-[11px] bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-bold">
+                            Ön Tampon
+                        </span>
+                    </div>
+
                     <form onsubmit="handleAddDamage(event)" class="space-y-4">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1">Plaka</label>
-                            <input type="text" id="damagePlate" placeholder="Örn: 34ABC123" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 uppercase font-bold">
+                            <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Plaka</label>
+                            <input type="text" id="damagePlate" placeholder="Örn: 34ABC123" required
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-blue-500 uppercase font-bold">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1">Hasarlı Bölge</label>
-                            <select id="damageRegion" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                            <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Seçili Parça / Bölge</label>
+                            <select id="damageRegion" onchange="highlightPartFromDropdown()"
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-blue-500 font-semibold">
                                 <option value="Ön Tampon">Ön Tampon</option>
-                                <option value="Arka Tampon">Arka Tampon</option>
-                                <option value="Sol Ön Çamurluk">Sol Ön Çamurluk</option>
-                                <option value="Sağ Ön Çamurluk">Sağ Ön Çamurluk</option>
-                                <option value="Sol Arka Çamurluk">Sol Arka Çamurluk</option>
-                                <option value="Sağ Arka Çamurluk">Sağ Arka Çamurluk</option>
-                                <option value="Sol Ön Kapı">Sol Ön Kapı</option>
-                                <option value="Sağ Ön Kapı">Sağ Ön Kapı</option>
-                                <option value="Sol Arka Kapı">Sol Arka Kapı</option>
-                                <option value="Sağ Arka Kapı">Sağ Arka Kapı</option>
                                 <option value="Motor Kaputu">Motor Kaputu</option>
                                 <option value="Tavan">Tavan</option>
                                 <option value="Bagaj Kapağı">Bagaj Kapağı</option>
+                                <option value="Arka Tampon">Arka Tampon</option>
+                                <option value="Sol Ön Çamurluk">Sol Ön Çamurluk</option>
+                                <option value="Sol Ön Kapı">Sol Ön Kapı</option>
+                                <option value="Sol Arka Kapı">Sol Arka Kapı</option>
+                                <option value="Sol Arka Çamurluk">Sol Arka Çamurluk</option>
+                                <option value="Sağ Ön Çamurluk">Sağ Ön Çamurluk</option>
+                                <option value="Sağ Ön Kapı">Sağ Ön Kapı</option>
+                                <option value="Sağ Arka Kapı">Sağ Arka Kapı</option>
+                                <option value="Sağ Arka Çamurluk">Sağ Arka Çamurluk</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1">Hasar Türü</label>
-                            <select id="damageType" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                            <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Eksper Durumu / Hasar Türü</label>
+                            <select id="damageType"
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-blue-500 font-semibold">
+                                <option value="Boyalı">Boyalı</option>
+                                <option value="Lokal Boyalı">Lokal Boyalı</option>
+                                <option value="Değişen">Değişen</option>
+                                <option value="Boyasız Göçük (PDR)">Boyasız Göçük (PDR)</option>
                                 <option value="Çizik">Çizik</option>
-                                <option value="Göçük">Göçük</option>
+                                <option value="Göçük">Göçük / Ezik</option>
                                 <option value="Boya Atması">Boya Atması</option>
                                 <option value="Kırık / Çatlak">Kırık / Çatlak</option>
-                                <option value="Ezik">Ezik</option>
+                                <option value="Sök-Tak">Sök-Tak İşlemli</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1">Açıklama (Opsiyonel)</label>
-                            <textarea id="damageDesc" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500" placeholder="Derin çizik mevcut..."></textarea>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Usta Notu / Mikron / Açıklama</label>
+                            <textarea id="damageDesc" rows="2"
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
+                                placeholder="Örn: 240 mikron temizlik boyası, derin çizik..."></textarea>
                         </div>
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition-all text-sm">Hasarı Kaydet</button>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all text-sm shadow-lg shadow-blue-600/20">
+                            <i class="fa-solid fa-plus mr-1.5"></i>Şablona İşle & Kaydet
+                        </button>
                     </form>
                 </div>
 
-                <!-- Harita ve Liste -->
-                <div class="lg:col-span-2 space-y-6">
+                <!-- SAĞ: 3D ARAÇ EKSPRES ŞABLONU + EKSPER RAPORU -->
+                <div class="lg:col-span-8 space-y-6">
                     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-base font-bold text-white"><i class="fa-solid fa-car-side text-amber-500 mr-2"></i>Araç Hasar Listesi Sorgula</h3>
-                            <div class="flex gap-2">
-                                <input type="text" id="damageSearchPlate" placeholder="Plaka Girin..." class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white uppercase font-bold focus:outline-none focus:border-blue-500">
-                                <button onclick="fetchDamages()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-xs font-semibold">Getir</button>
+                        <div class="flex flex-wrap justify-between items-center gap-3 border-b border-slate-800 pb-4 mb-5">
+                            <div>
+                                <h3 class="text-base font-bold text-white flex items-center">
+                                    <i class="fa-solid fa-car-burst text-amber-500 mr-2"></i>
+                                    <span>3D Kaporta & Ekspertiz Şablonu</span>
+                                    <span id="activeInspectionPlateBadge" class="hidden ml-2 bg-blue-600 text-white font-mono text-xs px-2.5 py-0.5 rounded"></span>
+                                </h3>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Parçaya tıklayarak sağ/sol kapı, kaput, tavan veya çamurluk seçebilirsiniz.</p>
+                            </div>
+                            <button onclick="downloadInspectionPDF()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition-all flex items-center space-x-1.5 shadow-lg shadow-red-600/20">
+                                <i class="fa-solid fa-file-pdf"></i>
+                                <span>Eksper PDF İndir</span>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                            <!-- İNTERAKTİF 3D GÖLGELİ ARAÇ SVG ŞABLONU -->
+                            <div class="md:col-span-7 flex flex-col items-center justify-center bg-slate-950/90 border border-slate-800/90 rounded-2xl p-4 relative">
+                                <!-- Üst Yön Etiketleri -->
+                                <div class="w-full flex justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500 px-3 mb-1">
+                                    <span>← Sol Taraf (Sürücü)</span>
+                                    <span class="text-blue-400">ÖN</span>
+                                    <span>Sağ Taraf (Yolcu) →</span>
+                                </div>
+
+                                <!-- Hover Bilgi Balonu -->
+                                <div id="carHoverTooltip" class="hidden absolute top-9 bg-slate-900/95 border border-slate-700 text-white text-[11px] font-semibold px-3 py-1 rounded-lg shadow-xl pointer-events-none z-20">
+                                    Parça Bilgisi
+                                </div>
+
+                                <svg id="carBlueprintSvg" width="320" height="450" viewBox="0 0 320 450" class="max-w-full h-auto select-none">
+                                    <defs>
+                                        <!-- 3D Metalik & Eksper Durum Gradyanları -->
+                                        <linearGradient id="grad-original" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#334155"/>
+                                            <stop offset="50%" stop-color="#1e293b"/>
+                                            <stop offset="100%" stop-color="#0f172a"/>
+                                        </linearGradient>
+                                        <linearGradient id="grad-painted" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#60a5fa"/>
+                                            <stop offset="100%" stop-color="#1d4ed8"/>
+                                        </linearGradient>
+                                        <linearGradient id="grad-local" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#22d3ee"/>
+                                            <stop offset="100%" stop-color="#0e7490"/>
+                                        </linearGradient>
+                                        <linearGradient id="grad-replaced" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#f87171"/>
+                                            <stop offset="100%" stop-color="#b91c1c"/>
+                                        </linearGradient>
+                                        <linearGradient id="grad-scratch" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#fbbf24"/>
+                                            <stop offset="100%" stop-color="#b45309"/>
+                                        </linearGradient>
+                                        <linearGradient id="grad-dent" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#c084fc"/>
+                                            <stop offset="100%" stop-color="#7e22ce"/>
+                                        </linearGradient>
+                                        <linearGradient id="grad-cracked" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#fb7185"/>
+                                            <stop offset="100%" stop-color="#9f1239"/>
+                                        </linearGradient>
+                                        <linearGradient id="grad-glass" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#0f172a"/>
+                                            <stop offset="50%" stop-color="#1e293b"/>
+                                            <stop offset="100%" stop-color="#020617"/>
+                                        </linearGradient>
+                                        <filter id="carDropShadow" x="-15%" y="-15%" width="130%" height="130%">
+                                            <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000000" flood-opacity="0.65"/>
+                                        </filter>
+                                    </defs>
+
+                                    <g filter="url(#carDropShadow)">
+                                        <!-- TEKERLEKLER (3D Görsel Detay) -->
+                                        <rect x="82" y="76" width="14" height="44" rx="5" fill="#090d16" stroke="#475569" stroke-width="1"/>
+                                        <rect x="224" y="76" width="14" height="44" rx="5" fill="#090d16" stroke="#475569" stroke-width="1"/>
+                                        <rect x="82" y="324" width="14" height="44" rx="5" fill="#090d16" stroke="#475569" stroke-width="1"/>
+                                        <rect x="224" y="324" width="14" height="44" rx="5" fill="#090d16" stroke="#475569" stroke-width="1"/>
+
+                                        <!-- YAN AYNALAR -->
+                                        <path d="M 92 152 L 75 158 L 77 168 L 92 164 Z" fill="#1e293b" stroke="#64748b" stroke-width="1.2"/>
+                                        <path d="M 228 152 L 245 158 L 243 168 L 228 164 Z" fill="#1e293b" stroke="#64748b" stroke-width="1.2"/>
+
+                                        <!-- 1. ÖN TAMPON -->
+                                        <path data-region="Ön Tampon" onclick="selectCarPart('Ön Tampon')"
+                                            d="M 102 44 C 102 22, 218 22, 218 44 L 224 58 L 96 58 Z"
+                                            fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part car-part-selected"/>
+                                        <!-- Farlar -->
+                                        <path d="M 103 44 L 122 48 L 116 54 L 100 51 Z" fill="#38bdf8" opacity="0.85" pointer-events="none"/>
+                                        <path d="M 217 44 L 198 48 L 204 54 L 220 51 Z" fill="#38bdf8" opacity="0.85" pointer-events="none"/>
+                                        <text x="160" y="42" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="bold" pointer-events="none">ÖN TAMPON</text>
+
+                                        <!-- 2. MOTOR KAPUTU -->
+                                        <path data-region="Motor Kaputu" onclick="selectCarPart('Motor Kaputu')"
+                                            d="M 102 64 L 218 64 L 212 138 L 108 138 Z"
+                                            fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
+                                        <!-- Kaput 3D Kuşak Çizgileri -->
+                                        <line x1="126" y1="70" x2="122" y2="132" stroke="#94a3b8" stroke-opacity="0.25" stroke-width="1.2" pointer-events="none"/>
+                                        <line x1="194" y1="70" x2="198" y2="132" stroke="#94a3b8" stroke-opacity="0.25" stroke-width="1.2" pointer-events="none"/>
+                                        <text x="160" y="105" text-anchor="middle" fill="#f8fafc" font-size="9.5" font-weight="bold" pointer-events="none">KAPUT</text>
+
+                                        <!-- ÖN CAM (Görsel) -->
+                                        <path d="M 110 143 L 210 143 L 202 178 L 118 178 Z"
+                                            fill="url(#grad-glass)" stroke="#475569" stroke-width="1.2" pointer-events="none"/>
+                                        <line x1="126" y1="149" x2="145" y2="172" stroke="#38bdf8" stroke-opacity="0.2" stroke-width="2" pointer-events="none"/>
+
+                                        <!-- 3. TAVAN -->
+                                        <rect data-region="Tavan" onclick="selectCarPart('Tavan')"
+                                            x="118" y="183" width="84" height="112" rx="8"
+                                            fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
+                                        <rect x="128" y="194" width="64" height="32" rx="4" fill="none" stroke="#94a3b8" stroke-opacity="0.2" stroke-width="1" pointer-events="none"/>
+                                        <text x="160" y="244" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="bold" pointer-events="none">TAVAN</text>
+
+                                        <!-- ARKA CAM (Görsel) -->
+                                        <path d="M 118 300 L 202 300 L 210 332 L 110 332 Z"
+                                            fill="url(#grad-glass)" stroke="#475569" stroke-width="1.2" pointer-events="none"/>
+
+                                        <!-- 4. BAGAJ KAPAĞI -->
+                                        <path data-region="Bagaj Kapağı" onclick="selectCarPart('Bagaj Kapağı')"
+                                            d="M 108 337 L 212 337 L 216 388 L 104 388 Z"
+                                            fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
+                                        <text x="160" y="366" text-anchor="middle" fill="#f8fafc" font-size="9.5" font-weight="bold" pointer-events="none">BAGAJ</text>
+
+                                        <!-- 5. ARKA TAMPON -->
+                                        <path data-region="Arka Tampon" onclick="selectCarPart('Arka Tampon')"
+                                            d="M 98 394 L 222 394 L 216 414 C 216 428, 104 428, 104 414 Z"
+                                            fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
+                                        <!-- Stoplar -->
+                                        <path d="M 101 398 L 122 400 L 120 406 L 100 404 Z" fill="#ef4444" opacity="0.9" pointer-events="none"/>
+                                        <path d="M 219 398 L 198 400 L 200 406 L 220 404 Z" fill="#ef4444" opacity="0.9" pointer-events="none"/>
+                                        <text x="160" y="414" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="bold" pointer-events="none">ARKA TAMPON</text>
+
+                                        <!-- ================= SOL TARAF (AÇILMIŞ 3D KANATLAR) ================= -->
+                                        <!-- 6. SOL ÖN ÇAMURLUK -->
+                                        <path data-region="Sol Ön Çamurluk" onclick="selectCarPart('Sol Ön Çamurluk')"
+                                            d="M 26 68 L 76 64 L 76 144 L 26 144 C 20 120, 20 92, 26 68 Z"
+                                            fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
+                                        <text x="51" y="101" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">SOL ÖN</text>
+                                        <text x="51" y="112" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">ÇAMURLUK</text>
+
+                                        <!-- 7. SOL ÖN KAPI -->
+                                        <path data-region="Sol Ön Kapı" onclick="selectCarPart('Sol Ön Kapı')"
+                                            d="M 22 150 L 76 150 L 76 234 L 22 234 Z"
+                                            fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
+                                        <rect x="28" y="216" width="10" height="3" rx="1.5" fill="#94a3b8" pointer-events="none"/>
+                                        <text x="49" y="190" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">SOL ÖN</text>
+                                        <text x="49" y="201" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">KAPI</text>
+
+                                        <!-- 8. SOL ARKA KAPI -->
+                                        <path data-region="Sol Arka Kapı" onclick="selectCarPart('Sol Arka Kapı')"
+                                            d="M 22 240 L 76 240 L 76 318 L 28 318 C 23 295, 22 268, 22 240 Z"
+                                            fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
+                                        <rect x="28" y="300" width="10" height="3" rx="1.5" fill="#94a3b8" pointer-events="none"/>
+                                        <text x="49" y="276" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">SOL ARKA</text>
+                                        <text x="49" y="287" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">KAPI</text>
+
+                                        <!-- 9. SOL ARKA ÇAMURLUK -->
+                                        <path data-region="Sol Arka Çamurluk" onclick="selectCarPart('Sol Arka Çamurluk')"
+                                            d="M 28 324 L 76 324 L 76 388 L 32 384 C 26 365, 26 344, 28 324 Z"
+                                            fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
+                                        <text x="52" y="353" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">SOL ARKA</text>
+                                        <text x="52" y="364" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">ÇAMURLUK</text>
+
+                                        <!-- ================= SAĞ TARAF (AÇILMIŞ 3D KANATLAR) ================= -->
+                                        <!-- 10. SAĞ ÖN ÇAMURLUK -->
+                                        <path data-region="Sağ Ön Çamurluk" onclick="selectCarPart('Sağ Ön Çamurluk')"
+                                            d="M 244 64 L 294 68 C 300 92, 300 120, 294 144 L 244 144 Z"
+                                            fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
+                                        <text x="269" y="101" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">SAĞ ÖN</text>
+                                        <text x="269" y="112" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">ÇAMURLUK</text>
+
+                                        <!-- 11. SAĞ ÖN KAPI -->
+                                        <path data-region="Sağ Ön Kapı" onclick="selectCarPart('Sağ Ön Kapı')"
+                                            d="M 244 150 L 298 150 L 298 234 L 244 234 Z"
+                                            fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
+                                        <rect x="282" y="216" width="10" height="3" rx="1.5" fill="#94a3b8" pointer-events="none"/>
+                                        <text x="271" y="190" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">SAĞ ÖN</text>
+                                        <text x="271" y="201" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">KAPI</text>
+
+                                        <!-- 12. SAĞ ARKA KAPI -->
+                                        <path data-region="Sağ Arka Kapı" onclick="selectCarPart('Sağ Arka Kapı')"
+                                            d="M 244 240 L 298 240 C 298 268, 297 295, 292 318 L 244 318 Z"
+                                            fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
+                                        <rect x="282" y="300" width="10" height="3" rx="1.5" fill="#94a3b8" pointer-events="none"/>
+                                        <text x="271" y="276" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">SAĞ ARKA</text>
+                                        <text x="271" y="287" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">KAPI</text>
+
+                                        <!-- 13. SAĞ ARKA ÇAMURLUK -->
+                                        <path data-region="Sağ Arka Çamurluk" onclick="selectCarPart('Sağ Arka Çamurluk')"
+                                            d="M 244 324 L 292 324 C 294 344, 294 365, 288 384 L 244 388 Z"
+                                            fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
+                                        <text x="268" y="353" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">SAĞ ARKA</text>
+                                        <text x="268" y="364" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">ÇAMURLUK</text>
+                                    </g>
+                                </svg>
+
+                                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">ARKA</div>
+                            </div>
+
+                            <!-- SAĞ: RENK LEJANTI & EKSPER ÖZET RAPORU -->
+                            <div class="md:col-span-5 space-y-4">
+                                <!-- Renk Açıklamaları -->
+                                <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4 space-y-2.5">
+                                    <div class="text-xs font-bold text-white uppercase tracking-wider mb-2">Eksper Renk Kodları</div>
+                                    <div class="grid grid-cols-2 gap-2 text-xs">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="w-3.5 h-3.5 rounded bg-slate-700 border border-slate-500 inline-block"></span>
+                                            <span class="text-slate-300">Orijinal</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="w-3.5 h-3.5 rounded bg-blue-600 inline-block"></span>
+                                            <span class="text-blue-300 font-semibold">Boyalı</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="w-3.5 h-3.5 rounded bg-cyan-500 inline-block"></span>
+                                            <span class="text-cyan-300 font-semibold">Lokal Boyalı</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="w-3.5 h-3.5 rounded bg-red-600 inline-block"></span>
+                                            <span class="text-red-300 font-semibold">Değişen</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="w-3.5 h-3.5 rounded bg-amber-500 inline-block"></span>
+                                            <span class="text-amber-300 font-semibold">Çizik / Boya Atması</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="w-3.5 h-3.5 rounded bg-purple-600 inline-block"></span>
+                                            <span class="text-purple-300 font-semibold">Göçük / PDR</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Ekspertiz Sayım Özeti -->
+                                <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4 space-y-3">
+                                    <div class="text-xs font-bold text-white uppercase tracking-wider flex items-center justify-between">
+                                        <span>Kaporta Eksper Özeti</span>
+                                        <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2 text-xs">
+                                        <div class="bg-slate-900 border border-slate-800 p-2.5 rounded-lg flex justify-between items-center">
+                                            <span class="text-slate-400">Orijinal</span>
+                                            <span id="expCountOriginal" class="font-mono font-bold text-emerald-400">13 / 13</span>
+                                        </div>
+                                        <div class="bg-slate-900 border border-slate-800 p-2.5 rounded-lg flex justify-between items-center">
+                                            <span class="text-slate-400">Boyalı</span>
+                                            <span id="expCountPainted" class="font-mono font-bold text-blue-400">0</span>
+                                        </div>
+                                        <div class="bg-slate-900 border border-slate-800 p-2.5 rounded-lg flex justify-between items-center">
+                                            <span class="text-slate-400">Lokal Boya</span>
+                                            <span id="expCountLocal" class="font-mono font-bold text-cyan-400">0</span>
+                                        </div>
+                                        <div class="bg-slate-900 border border-slate-800 p-2.5 rounded-lg flex justify-between items-center">
+                                            <span class="text-slate-400">Değişen</span>
+                                            <span id="expCountReplaced" class="font-mono font-bold text-red-400">0</span>
+                                        </div>
+                                        <div class="col-span-2 bg-slate-900 border border-slate-800 p-2.5 rounded-lg flex justify-between items-center">
+                                            <span class="text-slate-400">Çizik / Göçük / Diğer</span>
+                                            <span id="expCountOther" class="font-mono font-bold text-amber-400">0</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- DETAYLI EKSPERTİZ & HASAR KAYIT TABLOSU -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                        <h3 class="text-base font-bold text-white mb-4 flex items-center">
+                            <i class="fa-solid fa-file-lines text-blue-400 mr-2"></i>Kayıtlı Eksper & Hasar Detayları
+                        </h3>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs text-slate-300">
                                 <thead class="bg-slate-950 text-slate-400 uppercase font-semibold">
                                     <tr>
                                         <th class="p-3">Tarih</th>
                                         <th class="p-3">Plaka</th>
-                                        <th class="p-3">Bölge</th>
-                                        <th class="p-3">Hasar Türü</th>
+                                        <th class="p-3">Parça / Bölge</th>
+                                        <th class="p-3">Eksper Durumu</th>
                                         <th class="p-3">Açıklama</th>
                                         <th class="p-3 text-right">İşlem</th>
                                     </tr>
                                 </thead>
                                 <tbody id="damageTableBody" class="divide-y divide-slate-800">
-                                    <tr><td colspan="6" class="p-4 text-center text-slate-500">Plaka girip hasar listesini görüntüleyin.</td></tr>
+                                    <tr><td colspan="6" class="p-4 text-center text-slate-500">Sağ üstten plaka girip "Getir" butonuna basarak aracın eksper raporunu görüntüleyin.</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -833,7 +1137,7 @@
 
     </main>
 
-    <!-- PDF ŞABLONU -->
+    <!-- İŞ EMRİ PDF ŞABLONU -->
     <div class="hidden">
         <div id="pdfTemplate" class="p-8 bg-white text-slate-900 font-sans" style="width: 700px;">
             <div class="flex justify-between items-center border-b-2 border-slate-900 pb-4 mb-6">
@@ -882,15 +1186,49 @@
         </div>
     </div>
 
+    <!-- EKSPERTİZ RAPORU PDF ŞABLONU -->
+    <div class="hidden">
+        <div id="inspectionPdfTemplate" class="p-8 bg-white text-slate-900 font-sans" style="width: 700px;">
+            <div class="flex justify-between items-center border-b-2 border-slate-900 pb-4 mb-5">
+                <div>
+                    <h1 class="text-2xl font-black text-slate-900 tracking-wider" id="expPdfShopTitle">OTOSERVİS PRO</h1>
+                    <p class="text-xs text-slate-500">Kaporta & Boya Ekspertiz Tespit Raporu</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-slate-400 block">Rapor Tarihi</span>
+                    <span class="font-bold text-sm text-slate-800" id="expPdfDate"></span>
+                    <span class="font-mono font-black text-base text-blue-700 block mt-1" id="expPdfPlate"></span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6 items-start mb-6">
+                <div class="bg-slate-900 rounded-xl p-4 flex flex-col items-center justify-center" id="expPdfSvgHolder"></div>
+                <div class="space-y-3">
+                    <div class="text-xs font-bold uppercase text-slate-500 border-b border-slate-200 pb-1">Ekspertiz Özet Durumu</div>
+                    <div id="expPdfSummaryBox" class="space-y-1.5 text-xs"></div>
+                    <div class="pt-3 text-xs font-bold uppercase text-slate-500 border-b border-slate-200 pb-1">Tespit Edilen İşlemler</div>
+                    <div id="expPdfList" class="divide-y divide-slate-200 text-xs"></div>
+                </div>
+            </div>
+
+            <div class="border-t-2 border-slate-900 pt-5 mt-8 flex justify-between items-center">
+                <div class="text-xs text-slate-400" id="expPdfFooter">OtoServis Pro Dijital Ekspertiz Sistemi</div>
+                <div class="text-center">
+                    <div class="text-xs text-slate-400 mb-7">Eksper / Yetkili İmza</div>
+                    <div class="border-b border-slate-400 w-32"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // KENDİ TELEFON NUMARANI BURAYA YAZ (Abonelik yenileme WhatsApp mesajları buraya düşecek)
         const SUPPORT_PHONE = "905528674965";
 
         const baseUrl = window.location.origin;
         let currentShopId = sessionStorage.getItem("shopId") || null;
         let shopData = { shopName: "OtoServis Pro", phone: "", address: "", iban: "", logoUrl: "" };
+        let currentDamageRecords = [];
 
-        // Marka - Model Sözlüğü (Dinamik Öneri İçin)
         const carBrandModels = {
             "Peugeot": ["208", "308", "408", "3008", "5008", "Rifter", "Partner"],
             "BMW": ["1 Serisi", "2 Serisi", "3 Serisi", "4 Serisi", "5 Serisi", "7 Serisi", "X1", "X3", "X5", "M3", "M4"],
@@ -915,7 +1253,6 @@
             "Togg": ["T10X", "T10F"]
         };
 
-        // Marka seçildiğinde/yazıldığında modelleri otomatik dolduran dinleyici
         document.getElementById('marka').addEventListener('input', function(e) {
             const selectedBrand = e.target.value.trim();
             const modelDatalist = document.getElementById('carModelsList');
@@ -965,6 +1302,7 @@
         }
 
         window.onload = function() {
+            initCarBlueprintHover();
             if (sessionStorage.getItem("shopAuth") === "true" && currentShopId) {
                 document.getElementById("loginOverlay").classList.add("hidden");
                 document.getElementById("customerScreenLink").href = `/index.html?shopId=${currentShopId}`;
@@ -1947,6 +2285,132 @@
             if (res.ok) fetchAppointments();
         }
 
+        // ================= 3D EKSPERTİZ & ÇİZİK HARİTASI FONKSİYONLARI ================= //
+
+        function selectCarPart(regionName) {
+            const regionSelect = document.getElementById('damageRegion');
+            if (regionSelect) {
+                regionSelect.value = regionName;
+            }
+            const badge = document.getElementById('selectedPartBadge');
+            if (badge) {
+                badge.innerText = regionName;
+            }
+
+            // Eğer sorgulama kutusunda plaka varsa ama kayıt kutusu boşsa otomatik aktar
+            const searchVal = document.getElementById('damageSearchPlate')?.value.trim().toUpperCase();
+            const plateInput = document.getElementById('damagePlate');
+            if (searchVal && plateInput && !plateInput.value.trim()) {
+                plateInput.value = searchVal;
+            }
+
+            document.querySelectorAll('#carBlueprintSvg .car-part').forEach(el => {
+                if (el.getAttribute('data-region') === regionName) {
+                    el.classList.add('car-part-selected');
+                } else {
+                    el.classList.remove('car-part-selected');
+                }
+            });
+        }
+
+        function highlightPartFromDropdown() {
+            const val = document.getElementById('damageRegion').value;
+            selectCarPart(val);
+        }
+
+        function initCarBlueprintHover() {
+            const tooltip = document.getElementById('carHoverTooltip');
+            document.querySelectorAll('#carBlueprintSvg .car-part').forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    const region = el.getAttribute('data-region');
+                    const rec = currentDamageRecords.find(d => (d.region || d.Region) === region);
+                    const statusLabel = rec ? (rec.damageType || rec.DamageType) : "Orijinal / Hatasız";
+                    if (tooltip) {
+                        tooltip.innerText = `${region}: ${statusLabel}`;
+                        tooltip.classList.remove('hidden');
+                    }
+                });
+                el.addEventListener('mouseleave', () => {
+                    if (tooltip) tooltip.classList.add('hidden');
+                });
+            });
+        }
+
+        function getDamageFillGradient(damageType) {
+            const t = (damageType || "").toLowerCase();
+            if (t.includes("değişen")) return "url(#grad-replaced)";
+            if (t.includes("lokal")) return "url(#grad-local)";
+            if (t.includes("boyalı") || t.includes("boya")) {
+                if (t.includes("atması")) return "url(#grad-scratch)";
+                if (t.includes("boyasız")) return "url(#grad-dent)";
+                return "url(#grad-painted)";
+            }
+            if (t.includes("göçük") || t.includes("ezik") || t.includes("pdr")) return "url(#grad-dent)";
+            if (t.includes("çizik")) return "url(#grad-scratch)";
+            if (t.includes("kırık") || t.includes("çatlak") || t.includes("sök")) return "url(#grad-cracked)";
+            return "url(#grad-scratch)";
+        }
+
+        function getDamageBadgeHtml(damageType) {
+            const t = (damageType || "").toLowerCase();
+            if (t.includes("değişen")) {
+                return `<span class="bg-red-500/15 text-red-400 border border-red-500/30 font-bold px-2 py-0.5 rounded text-[11px]">${damageType}</span>`;
+            }
+            if (t.includes("lokal")) {
+                return `<span class="bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 font-bold px-2 py-0.5 rounded text-[11px]">${damageType}</span>`;
+            }
+            if (t.includes("boyalı")) {
+                return `<span class="bg-blue-500/15 text-blue-400 border border-blue-500/30 font-bold px-2 py-0.5 rounded text-[11px]">${damageType}</span>`;
+            }
+            if (t.includes("göçük") || t.includes("ezik") || t.includes("pdr")) {
+                return `<span class="bg-purple-500/15 text-purple-400 border border-purple-500/30 font-bold px-2 py-0.5 rounded text-[11px]">${damageType}</span>`;
+            }
+            return `<span class="bg-amber-500/15 text-amber-400 border border-amber-500/30 font-bold px-2 py-0.5 rounded text-[11px]">${damageType}</span>`;
+        }
+
+        function updateCarBlueprintVisuals(records) {
+            currentDamageRecords = records || [];
+            const regionStatusMap = new Map();
+
+            // Her parça için kaydedilmiş son/en kritik işlemi eşle
+            currentDamageRecords.forEach(d => {
+                const reg = d.region || d.Region;
+                const dtype = d.damageType || d.DamageType;
+                if (reg) {
+                    regionStatusMap.set(reg, dtype);
+                }
+            });
+
+            // Tüm 13 parçayı güncelle
+            document.querySelectorAll('#carBlueprintSvg .car-part').forEach(el => {
+                const reg = el.getAttribute('data-region');
+                if (regionStatusMap.has(reg)) {
+                    el.setAttribute('fill', getDamageFillGradient(regionStatusMap.get(reg)));
+                } else {
+                    el.setAttribute('fill', 'url(#grad-original)');
+                }
+            });
+
+            // Ekspertiz sayım özetini güncelle
+            let painted = 0, local = 0, replaced = 0, other = 0;
+            regionStatusMap.forEach(dtype => {
+                const t = (dtype || "").toLowerCase();
+                if (t.includes("değişen")) replaced++;
+                else if (t.includes("lokal")) local++;
+                else if (t === "boyalı") painted++;
+                else other++;
+            });
+
+            const totalParts = 13;
+            const original = Math.max(0, totalParts - regionStatusMap.size);
+
+            document.getElementById('expCountOriginal').innerText = `${original} / ${totalParts}`;
+            document.getElementById('expCountPainted').innerText = painted;
+            document.getElementById('expCountLocal').innerText = local;
+            document.getElementById('expCountReplaced').innerText = replaced;
+            document.getElementById('expCountOther').innerText = other;
+        }
+
         async function fetchDamages() {
             const plateInput = document.getElementById('damageSearchPlate');
             const plate = plateInput ? plateInput.value.trim() : '';
@@ -1956,6 +2420,18 @@
             }
 
             const cleanPlate = plate.replace(/\s+/g, '').toUpperCase();
+            plateInput.value = cleanPlate;
+
+            // Sol formdaki plaka kutusunu da otomatik doldur
+            const addPlateInput = document.getElementById('damagePlate');
+            if (addPlateInput) addPlateInput.value = cleanPlate;
+
+            const activeBadge = document.getElementById('activeInspectionPlateBadge');
+            if (activeBadge) {
+                activeBadge.innerText = cleanPlate;
+                activeBadge.classList.remove('hidden');
+            }
+
             const tbody = document.getElementById('damageTableBody');
             tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">Yükleniyor...</td></tr>`;
 
@@ -1965,10 +2441,11 @@
                 });
                 if (res.ok) {
                     const list = await res.json();
+                    updateCarBlueprintVisuals(list);
                     tbody.innerHTML = '';
 
                     if (list.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">Bu plakaya ait kayıtlı hasar bulunmuyor.</td></tr>`;
+                        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-emerald-400 font-semibold">Bu plakaya ait hasar/boya kaydı yok — Araç tamamen orijinal görünüyor.</td></tr>`;
                         return;
                     }
 
@@ -1986,7 +2463,7 @@
                                 <td class="p-3 text-slate-400 text-xs">${dateStr}</td>
                                 <td class="p-3 font-mono font-bold text-blue-400">${dPlate}</td>
                                 <td class="p-3 font-semibold text-white">${dRegion}</td>
-                                <td class="p-3"><span class="bg-amber-500/10 text-amber-400 font-bold px-2 py-0.5 rounded text-[11px]">${dType}</span></td>
+                                <td class="p-3">${getDamageBadgeHtml(dType)}</td>
                                 <td class="p-3 text-slate-300">${dDesc}</td>
                                 <td class="p-3 text-right">
                                     <button onclick="deleteDamage(${dId}, '${dPlate}')" class="text-red-400 hover:text-red-300 transition-all">
@@ -2019,15 +2496,12 @@
                 });
 
                 if (res.ok) {
-                    alert("Hasar kaydı başarıyla eklendi!");
-                    document.getElementById('damagePlate').value = '';
                     document.getElementById('damageDesc').value = '';
-                    
                     const searchPlate = document.getElementById('damageSearchPlate');
                     if (searchPlate) {
                         searchPlate.value = plate;
                     }
-                    fetchDamages();
+                    await fetchDamages();
                 } else {
                     alert("Hasar kaydedilemedi.");
                 }
@@ -2037,7 +2511,7 @@
         }
 
         async function deleteDamage(id, plate) {
-            if (!confirm("Bu hasar kaydını silmek istediğinize emin misiniz?")) return;
+            if (!confirm("Bu eksper/hasar kaydını silmek istediğinize emin misiniz?")) return;
             try {
                 const res = await fetch(`/api/Services/damages/${id}`, { 
                     method: 'DELETE',
@@ -2045,11 +2519,64 @@
                 });
                 if (res.ok) {
                     document.getElementById('damageSearchPlate').value = plate;
-                    fetchDamages();
+                    await fetchDamages();
                 }
             } catch (err) {
                 alert("Silme başarısız.");
             }
+        }
+
+        function downloadInspectionPDF() {
+            const plate = (document.getElementById('damageSearchPlate').value || document.getElementById('damagePlate').value || "ARAC").trim().toUpperCase();
+            const activeShopName = shopData.shopName || shopData.ShopName || "OTOSERVİS PRO";
+
+            document.getElementById('expPdfShopTitle').innerText = activeShopName.toUpperCase();
+            document.getElementById('expPdfDate').innerText = new Date().toLocaleDateString('tr-TR');
+            document.getElementById('expPdfPlate').innerText = plate;
+            document.getElementById('expPdfFooter').innerText = `Bu ekspertiz raporu ${activeShopName} tarafından oluşturulmuştur.`;
+
+            // SVG şablonunu PDF içine klonla (seçim halkasını kaldırarak)
+            const svgClone = document.getElementById('carBlueprintSvg').cloneNode(true);
+            svgClone.querySelectorAll('.car-part-selected').forEach(el => el.classList.remove('car-part-selected'));
+            svgClone.setAttribute('width', '250');
+            svgClone.setAttribute('height', '350');
+            const holder = document.getElementById('expPdfSvgHolder');
+            holder.innerHTML = '';
+            holder.appendChild(svgClone);
+
+            // Özet kutusunu doldur
+            document.getElementById('expPdfSummaryBox').innerHTML = `
+                <div class="flex justify-between"><span>Orijinal Parça:</span><strong>${document.getElementById('expCountOriginal').innerText}</strong></div>
+                <div class="flex justify-between text-blue-700"><span>Boyalı Parça:</span><strong>${document.getElementById('expCountPainted').innerText}</strong></div>
+                <div class="flex justify-between text-cyan-700"><span>Lokal Boyalı:</span><strong>${document.getElementById('expCountLocal').innerText}</strong></div>
+                <div class="flex justify-between text-red-700"><span>Değişen Parça:</span><strong>${document.getElementById('expCountReplaced').innerText}</strong></div>
+                <div class="flex justify-between text-amber-700"><span>Çizik / Göçük / Diğer:</span><strong>${document.getElementById('expCountOther').innerText}</strong></div>
+            `;
+
+            // Kayıt listesini doldur
+            const listBox = document.getElementById('expPdfList');
+            listBox.innerHTML = '';
+            if (currentDamageRecords.length === 0) {
+                listBox.innerHTML = `<div class="py-2 text-emerald-700 font-semibold">Araç kaportası tamamen orijinaldir.</div>`;
+            } else {
+                currentDamageRecords.forEach(d => {
+                    const reg = d.region || d.Region;
+                    const dtype = d.damageType || d.DamageType;
+                    const desc = d.description || d.Description;
+                    listBox.innerHTML += `
+                        <div class="py-1.5">
+                            <div class="flex justify-between font-bold">
+                                <span>${reg}</span>
+                                <span>${dtype}</span>
+                            </div>
+                            ${desc ? `<div class="text-[11px] text-slate-500">${desc}</div>` : ''}
+                        </div>
+                    `;
+                });
+            }
+
+            const element = document.getElementById('inspectionPdfTemplate');
+            html2pdf().from(element).save(`Ekspertiz_Raporu_${plate}.pdf`);
         }
     </script>
 </body>

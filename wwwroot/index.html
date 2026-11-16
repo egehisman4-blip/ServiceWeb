@@ -6,6 +6,20 @@
     <title>Araç Servis Takip Ekranı</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .cust-car-part {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .cust-car-part:hover {
+            filter: brightness(1.22);
+        }
+        .cust-car-part-active {
+            stroke: #38bdf8 !important;
+            stroke-width: 2.5px !important;
+            filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.7));
+        }
+    </style>
 </head>
 <body class="bg-slate-900 min-h-screen text-slate-100 font-sans flex flex-col justify-between">
 
@@ -98,6 +112,266 @@
                     Henüz not eklenmedi.
                 </div>
             </div>
+
+            <!-- 3D KAPORTA & EKSPERTİZ DURUM RAPORU (SALT OKUNUR) -->
+            <div id="inspectionReportBox" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-5">
+                <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-700 pb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center">
+                            <i class="fa-solid fa-car-burst text-amber-500 mr-2"></i>Kaporta & Ekspertiz Durum Raporu
+                        </h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Parçaların üzerine dokunarak kaporta durumunu inceleyebilirsiniz.</p>
+                    </div>
+                    <span class="text-[11px] bg-slate-900 text-slate-400 border border-slate-700 px-2.5 py-1 rounded-lg font-semibold">
+                        <i class="fa-solid fa-eye mr-1 text-blue-400"></i>Servis Tespit Kaydı
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                    <!-- SOL: 3D ARAÇ ŞABLONU -->
+                    <div class="md:col-span-7 flex flex-col items-center justify-center bg-slate-900/90 border border-slate-700/80 rounded-2xl p-4 relative">
+                        <div class="w-full flex justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500 px-2 mb-1">
+                            <span>← Sol Taraf</span>
+                            <span class="text-blue-400">ÖN</span>
+                            <span>Sağ Taraf →</span>
+                        </div>
+
+                        <!-- Seçilen / Üzerine Gelinen Parça Bilgi Kartı -->
+                        <div id="custPartDetailBanner" class="w-full text-center bg-slate-800/95 border border-slate-700 rounded-lg px-3 py-1.5 mb-2 text-xs text-slate-300">
+                            Parça detayını görmek için şablon üzerinden bir bölgeye dokunun.
+                        </div>
+
+                        <svg id="custCarBlueprintSvg" width="300" height="420" viewBox="0 0 320 450" class="max-w-full h-auto select-none">
+                            <defs>
+                                <linearGradient id="cgrad-original" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#334155"/>
+                                    <stop offset="50%" stop-color="#1e293b"/>
+                                    <stop offset="100%" stop-color="#0f172a"/>
+                                </linearGradient>
+                                <linearGradient id="cgrad-painted" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#60a5fa"/>
+                                    <stop offset="100%" stop-color="#1d4ed8"/>
+                                </linearGradient>
+                                <linearGradient id="cgrad-local" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#22d3ee"/>
+                                    <stop offset="100%" stop-color="#0e7490"/>
+                                </linearGradient>
+                                <linearGradient id="cgrad-replaced" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#f87171"/>
+                                    <stop offset="100%" stop-color="#b91c1c"/>
+                                </linearGradient>
+                                <linearGradient id="cgrad-scratch" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#fbbf24"/>
+                                    <stop offset="100%" stop-color="#b45309"/>
+                                </linearGradient>
+                                <linearGradient id="cgrad-dent" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#c084fc"/>
+                                    <stop offset="100%" stop-color="#7e22ce"/>
+                                </linearGradient>
+                                <linearGradient id="cgrad-cracked" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#fb7185"/>
+                                    <stop offset="100%" stop-color="#9f1239"/>
+                                </linearGradient>
+                                <linearGradient id="cgrad-glass" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#0f172a"/>
+                                    <stop offset="50%" stop-color="#1e293b"/>
+                                    <stop offset="100%" stop-color="#020617"/>
+                                </linearGradient>
+                                <filter id="custCarShadow" x="-15%" y="-15%" width="130%" height="130%">
+                                    <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000000" flood-opacity="0.6"/>
+                                </filter>
+                            </defs>
+
+                            <g filter="url(#custCarShadow)">
+                                <!-- Tekerlekler -->
+                                <rect x="82" y="76" width="14" height="44" rx="5" fill="#090d16" stroke="#475569" stroke-width="1"/>
+                                <rect x="224" y="76" width="14" height="44" rx="5" fill="#090d16" stroke="#475569" stroke-width="1"/>
+                                <rect x="82" y="324" width="14" height="44" rx="5" fill="#090d16" stroke="#475569" stroke-width="1"/>
+                                <rect x="224" y="324" width="14" height="44" rx="5" fill="#090d16" stroke="#475569" stroke-width="1"/>
+
+                                <!-- Yan Aynalar -->
+                                <path d="M 92 152 L 75 158 L 77 168 L 92 164 Z" fill="#1e293b" stroke="#64748b" stroke-width="1.2"/>
+                                <path d="M 228 152 L 245 158 L 243 168 L 228 164 Z" fill="#1e293b" stroke="#64748b" stroke-width="1.2"/>
+
+                                <!-- 1. Ön Tampon -->
+                                <path data-region="Ön Tampon" onclick="inspectCustomerPart('Ön Tampon', this)"
+                                    d="M 102 44 C 102 22, 218 22, 218 44 L 224 58 L 96 58 Z"
+                                    fill="url(#cgrad-original)" stroke="#64748b" stroke-width="1.5" class="cust-car-part"/>
+                                <path d="M 103 44 L 122 48 L 116 54 L 100 51 Z" fill="#38bdf8" opacity="0.85" pointer-events="none"/>
+                                <path d="M 217 44 L 198 48 L 204 54 L 220 51 Z" fill="#38bdf8" opacity="0.85" pointer-events="none"/>
+                                <text x="160" y="42" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="bold" pointer-events="none">ÖN TAMPON</text>
+
+                                <!-- 2. Motor Kaputu -->
+                                <path data-region="Motor Kaputu" onclick="inspectCustomerPart('Motor Kaputu', this)"
+                                    d="M 102 64 L 218 64 L 212 138 L 108 138 Z"
+                                    fill="url(#cgrad-original)" stroke="#64748b" stroke-width="1.5" class="cust-car-part"/>
+                                <line x1="126" y1="70" x2="122" y2="132" stroke="#94a3b8" stroke-opacity="0.25" stroke-width="1.2" pointer-events="none"/>
+                                <line x1="194" y1="70" x2="198" y2="132" stroke="#94a3b8" stroke-opacity="0.25" stroke-width="1.2" pointer-events="none"/>
+                                <text x="160" y="105" text-anchor="middle" fill="#f8fafc" font-size="9.5" font-weight="bold" pointer-events="none">KAPUT</text>
+
+                                <!-- Ön Cam -->
+                                <path d="M 110 143 L 210 143 L 202 178 L 118 178 Z"
+                                    fill="url(#cgrad-glass)" stroke="#475569" stroke-width="1.2" pointer-events="none"/>
+
+                                <!-- 3. Tavan -->
+                                <rect data-region="Tavan" onclick="inspectCustomerPart('Tavan', this)"
+                                    x="118" y="183" width="84" height="112" rx="8"
+                                    fill="url(#cgrad-original)" stroke="#64748b" stroke-width="1.5" class="cust-car-part"/>
+                                <rect x="128" y="194" width="64" height="32" rx="4" fill="none" stroke="#94a3b8" stroke-opacity="0.2" stroke-width="1" pointer-events="none"/>
+                                <text x="160" y="244" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="bold" pointer-events="none">TAVAN</text>
+
+                                <!-- Arka Cam -->
+                                <path d="M 118 300 L 202 300 L 210 332 L 110 332 Z"
+                                    fill="url(#cgrad-glass)" stroke="#475569" stroke-width="1.2" pointer-events="none"/>
+
+                                <!-- 4. Bagaj Kapağı -->
+                                <path data-region="Bagaj Kapağı" onclick="inspectCustomerPart('Bagaj Kapağı', this)"
+                                    d="M 108 337 L 212 337 L 216 388 L 104 388 Z"
+                                    fill="url(#cgrad-original)" stroke="#64748b" stroke-width="1.5" class="cust-car-part"/>
+                                <text x="160" y="366" text-anchor="middle" fill="#f8fafc" font-size="9.5" font-weight="bold" pointer-events="none">BAGAJ</text>
+
+                                <!-- 5. Arka Tampon -->
+                                <path data-region="Arka Tampon" onclick="inspectCustomerPart('Arka Tampon', this)"
+                                    d="M 98 394 L 222 394 L 216 414 C 216 428, 104 428, 104 414 Z"
+                                    fill="url(#cgrad-original)" stroke="#64748b" stroke-width="1.5" class="cust-car-part"/>
+                                <path d="M 101 398 L 122 400 L 120 406 L 100 404 Z" fill="#ef4444" opacity="0.9" pointer-events="none"/>
+                                <path d="M 219 398 L 198 400 L 200 406 L 220 404 Z" fill="#ef4444" opacity="0.9" pointer-events="none"/>
+                                <text x="160" y="414" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="bold" pointer-events="none">ARKA TAMPON</text>
+
+                                <!-- 6. Sol Ön Çamurluk -->
+                                <path data-region="Sol Ön Çamurluk" onclick="inspectCustomerPart('Sol Ön Çamurluk', this)"
+                                    d="M 26 68 L 76 64 L 76 144 L 26 144 C 20 120, 20 92, 26 68 Z"
+                                    fill="url(#cgrad-original)" stroke="#64748b" stroke-width="1.5" class="cust-car-part"/>
+                                <text x="51" y="101" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">SOL ÖN</text>
+                                <text x="51" y="112" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">ÇAMURLUK</text>
+
+                                <!-- 7. Sol Ön Kapı -->
+                                <path data-region="Sol Ön Kapı" onclick="inspectCustomerPart('Sol Ön Kapı', this)"
+                                    d="M 22 150 L 76 150 L 76 234 L 22 234 Z"
+                                    fill="url(#cgrad-original)" stroke="#64748b" stroke-width="1.5" class="cust-car-part"/>
+                                <rect x="28" y="216" width="10" height="3" rx="1.5" fill="#94a3b8" pointer-events="none"/>
+                                <text x="49" y="190" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">SOL ÖN</text>
+                                <text x="49" y="201" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">KAPI</text>
+
+                                <!-- 8. Sol Arka Kapı -->
+                                <path data-region="Sol Arka Kapı" onclick="inspectCustomerPart('Sol Arka Kapı', this)"
+                                    d="M 22 240 L 76 240 L 76 318 L 28 318 C 23 295, 22 268, 22 240 Z"
+                                    fill="url(#cgrad-original)" stroke="#64748b" stroke-width="1.5" class="cust-car-part"/>
+                                <rect x="28" y="300" width="10" height="3" rx="1.5" fill="#94a3b8" pointer-events="none"/>
+                                <text x="49" y="276" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">SOL ARKA</text>
+                                <text x="49" y="287" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">KAPI</text>
+
+                                <!-- 9. Sol Arka Çamurluk -->
+                                <path data-region="Sol Arka Çamurluk" onclick="inspectCustomerPart('Sol Arka Çamurluk', this)"
+                                    d="M 28 324 L 76 324 L 76 388 L 32 384 C 26 365, 26 344, 28 324 Z"
+                                    fill="url(#cgrad-original)" stroke="#64748b" stroke-width="1.5" class="cust-car-part"/>
+                                <text x="52" y="353" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">SOL ARKA</text>
+                                <text x="52" y="364" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">ÇAMURLUK</text>
+
+                                <!-- 10. Sağ Ön Çamurluk -->
+                                <path data-region="Sağ Ön Çamurluk" onclick="inspectCustomerPart('Sağ Ön Çamurluk', this)"
+                                    d="M 244 64 L 294 68 C 300 92, 300 120, 294 144 L 244 144 Z"
+                                    fill="url(#cgrad-original)" stroke="#64748b" stroke-width="1.5" class="cust-car-part"/>
+                                <text x="269" y="101" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">SAĞ ÖN</text>
+                                <text x="269" y="112" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">ÇAMURLUK</text>
+
+                                <!-- 11. Sağ Ön Kapı -->
+                                <path data-region="Sağ Ön Kapı" onclick="inspectCustomerPart('Sağ Ön Kapı', this)"
+                                    d="M 244 150 L 298 150 L 298 234 L 244 234 Z"
+                                    fill="url(#cgrad-original)" stroke="#64748b" stroke-width="1.5" class="cust-car-part"/>
+                                <rect x="282" y="216" width="10" height="3" rx="1.5" fill="#94a3b8" pointer-events="none"/>
+                                <text x="271" y="190" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">SAĞ ÖN</text>
+                                <text x="271" y="201" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">KAPI</text>
+
+                                <!-- 12. Sağ Arka Kapı -->
+                                <path data-region="Sağ Arka Kapı" onclick="inspectCustomerPart('Sağ Arka Kapı', this)"
+                                    d="M 244 240 L 298 240 C 298 268, 297 295, 292 318 L 244 318 Z"
+                                    fill="url(#cgrad-original)" stroke="#64748b" stroke-width="1.5" class="cust-car-part"/>
+                                <rect x="282" y="300" width="10" height="3" rx="1.5" fill="#94a3b8" pointer-events="none"/>
+                                <text x="271" y="276" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">SAĞ ARKA</text>
+                                <text x="271" y="287" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">KAPI</text>
+
+                                <!-- 13. Sağ Arka Çamurluk -->
+                                <path data-region="Sağ Arka Çamurluk" onclick="inspectCustomerPart('Sağ Arka Çamurluk', this)"
+                                    d="M 244 324 L 292 324 C 294 344, 294 365, 288 384 L 244 388 Z"
+                                    fill="url(#cgrad-original)" stroke="#64748b" stroke-width="1.5" class="cust-car-part"/>
+                                <text x="268" y="353" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">SAĞ ARKA</text>
+                                <text x="268" y="364" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">ÇAMURLUK</text>
+                            </g>
+                        </svg>
+
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">ARKA</div>
+                    </div>
+
+                    <!-- SAĞ: RENK AÇIKLAMASI & EKSPER ÖZETİ -->
+                    <div class="md:col-span-5 space-y-4">
+                        <div class="bg-slate-900/80 border border-slate-700 rounded-xl p-4 space-y-2.5">
+                            <div class="text-xs font-bold text-white uppercase tracking-wider mb-1">Renk Açıklamaları</div>
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-3.5 h-3.5 rounded bg-slate-700 border border-slate-500 inline-block"></span>
+                                    <span class="text-slate-300">Orijinal</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-3.5 h-3.5 rounded bg-blue-600 inline-block"></span>
+                                    <span class="text-blue-300 font-semibold">Boyalı</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-3.5 h-3.5 rounded bg-cyan-500 inline-block"></span>
+                                    <span class="text-cyan-300 font-semibold">Lokal Boyalı</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-3.5 h-3.5 rounded bg-red-600 inline-block"></span>
+                                    <span class="text-red-300 font-semibold">Değişen</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-3.5 h-3.5 rounded bg-amber-500 inline-block"></span>
+                                    <span class="text-amber-300 font-semibold">Çizik / Boya Atması</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-3.5 h-3.5 rounded bg-purple-600 inline-block"></span>
+                                    <span class="text-purple-300 font-semibold">Göçük / PDR</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900/80 border border-slate-700 rounded-xl p-4 space-y-2.5">
+                            <div class="text-xs font-bold text-white uppercase tracking-wider flex items-center justify-between">
+                                <span>Kaporta Özeti</span>
+                                <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg flex justify-between items-center">
+                                    <span class="text-slate-400">Orijinal</span>
+                                    <span id="custExpOriginal" class="font-mono font-bold text-emerald-400">13 / 13</span>
+                                </div>
+                                <div class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg flex justify-between items-center">
+                                    <span class="text-slate-400">Boyalı</span>
+                                    <span id="custExpPainted" class="font-mono font-bold text-blue-400">0</span>
+                                </div>
+                                <div class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg flex justify-between items-center">
+                                    <span class="text-slate-400">Lokal Boya</span>
+                                    <span id="custExpLocal" class="font-mono font-bold text-cyan-400">0</span>
+                                </div>
+                                <div class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg flex justify-between items-center">
+                                    <span class="text-slate-400">Değişen</span>
+                                    <span id="custExpReplaced" class="font-mono font-bold text-red-400">0</span>
+                                </div>
+                                <div class="col-span-2 bg-slate-800 border border-slate-700 p-2.5 rounded-lg flex justify-between items-center">
+                                    <span class="text-slate-400">Çizik / Göçük / Diğer</span>
+                                    <span id="custExpOther" class="font-mono font-bold text-amber-400">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tespit Edilen İşlem / Hasar Listesi (Salt Okunur) -->
+                <div id="custDamageListWrapper" class="border-t border-slate-700 pt-4">
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Kayıtlı Kaporta & Çizik Tespitleri</div>
+                    <div id="custDamageList" class="space-y-2"></div>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -117,6 +391,7 @@
         ];
 
         let currentVehicleData = null;
+        let customerDamagesCache = [];
 
         // URL'den veya depolamadan dükkan ID'sini yakala
         const urlParams = new URLSearchParams(window.location.search);
@@ -144,7 +419,7 @@
                     if (phone) {
                         document.getElementById('displayShopContact').innerText = `İletişim: ${phone} | Canlı Araç Takip`;
                     }
-                    document.getElementById('footerText').innerText = `© 2026 ${shopName} - Dijital Takip Altyapısı`;
+                    document.getElementById('footerText').innerText = `© 2026 ${shopName} Dijital Takip Altyapısı`;
                 }
             } catch (e) {}
         }
@@ -158,17 +433,19 @@
         }
 
         async function searchVehicle(plate) {
+            const cleanPlate = plate.replace(/\s+/g, '').toUpperCase();
             document.getElementById('loading').classList.remove('hidden');
             document.getElementById('resultBox').classList.add('hidden');
             document.getElementById('errorBox').classList.add('hidden');
 
             try {
-                const res = await fetch(`/api/Services/search/${encodeURIComponent(plate)}?shopId=${currentShopId}`);
+                const res = await fetch(`/api/Services/search/${encodeURIComponent(cleanPlate)}?shopId=${currentShopId}`);
                 document.getElementById('loading').classList.add('hidden');
 
                 if (res.ok) {
                     currentVehicleData = await res.json();
                     renderVehicleDetails(currentVehicleData);
+                    fetchCustomerDamages(cleanPlate);
                 } else {
                     document.getElementById('errorMessage').innerText = "Bu plakaya ait aktif bir servis kaydı bulunamadı.";
                     document.getElementById('errorBox').classList.remove('hidden');
@@ -346,6 +623,144 @@
             }
 
             document.getElementById('resultBox').classList.remove('hidden');
+        }
+
+        // ================= MÜŞTERİ SALT-OKUNUR 3D EKSPERTİZ ŞABLONU ================= //
+
+        function getCustFillGradient(damageType) {
+            const t = (damageType || "").toLowerCase();
+            if (t.includes("değişen")) return "url(#cgrad-replaced)";
+            if (t.includes("lokal")) return "url(#cgrad-local)";
+            if (t.includes("boyalı") || t.includes("boya")) {
+                if (t.includes("atması")) return "url(#cgrad-scratch)";
+                if (t.includes("boyasız")) return "url(#cgrad-dent)";
+                return "url(#cgrad-painted)";
+            }
+            if (t.includes("göçük") || t.includes("ezik") || t.includes("pdr")) return "url(#cgrad-dent)";
+            if (t.includes("çizik")) return "url(#cgrad-scratch)";
+            if (t.includes("kırık") || t.includes("çatlak") || t.includes("sök")) return "url(#cgrad-cracked)";
+            return "url(#cgrad-scratch)";
+        }
+
+        function getCustBadgeHtml(damageType) {
+            const t = (damageType || "").toLowerCase();
+            if (t.includes("değişen")) {
+                return `<span class="bg-red-500/15 text-red-400 border border-red-500/30 font-bold px-2 py-0.5 rounded text-[11px]">${damageType}</span>`;
+            }
+            if (t.includes("lokal")) {
+                return `<span class="bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 font-bold px-2 py-0.5 rounded text-[11px]">${damageType}</span>`;
+            }
+            if (t.includes("boyalı")) {
+                return `<span class="bg-blue-500/15 text-blue-400 border border-blue-500/30 font-bold px-2 py-0.5 rounded text-[11px]">${damageType}</span>`;
+            }
+            if (t.includes("göçük") || t.includes("ezik") || t.includes("pdr")) {
+                return `<span class="bg-purple-500/15 text-purple-400 border border-purple-500/30 font-bold px-2 py-0.5 rounded text-[11px]">${damageType}</span>`;
+            }
+            return `<span class="bg-amber-500/15 text-amber-400 border border-amber-500/30 font-bold px-2 py-0.5 rounded text-[11px]">${damageType}</span>`;
+        }
+
+        function inspectCustomerPart(regionName, el) {
+            document.querySelectorAll('#custCarBlueprintSvg .cust-car-part').forEach(p => {
+                p.classList.remove('cust-car-part-active');
+            });
+            if (el) el.classList.add('cust-car-part-active');
+
+            const banner = document.getElementById('custPartDetailBanner');
+            const matches = customerDamagesCache.filter(d => (d.region || d.Region) === regionName);
+
+            if (matches.length === 0) {
+                banner.innerHTML = `<strong class="text-white">${regionName}:</strong> <span class="text-emerald-400 font-semibold">Orijinal / İşlemsiz</span>`;
+            } else {
+                const latest = matches[matches.length - 1];
+                const dtype = latest.damageType || latest.DamageType;
+                const desc = latest.description || latest.Description;
+                banner.innerHTML = `<strong class="text-white">${regionName}:</strong> <span class="text-amber-300 font-bold">${dtype}</span>${desc ? ` <span class="text-slate-400">(${desc})</span>` : ''}`;
+            }
+        }
+
+        async function fetchCustomerDamages(cleanPlate) {
+            const listDiv = document.getElementById('custDamageList');
+            const banner = document.getElementById('custPartDetailBanner');
+            banner.innerHTML = `Parça detayını görmek için şablon üzerinden bir bölgeye dokunun.`;
+            document.querySelectorAll('#custCarBlueprintSvg .cust-car-part').forEach(p => {
+                p.classList.remove('cust-car-part-active');
+                p.setAttribute('fill', 'url(#cgrad-original)');
+            });
+
+            try {
+                const res = await fetch(`/api/Services/damages/${encodeURIComponent(cleanPlate)}?shopId=${currentShopId}`);
+                if (!res.ok) {
+                    listDiv.innerHTML = `<p class="text-xs text-slate-500">Kaporta tespit bilgisi yüklenemedi.</p>`;
+                    return;
+                }
+
+                const records = await res.json();
+                customerDamagesCache = records || [];
+
+                const regionMap = new Map();
+                customerDamagesCache.forEach(d => {
+                    const reg = d.region || d.Region;
+                    const dtype = d.damageType || d.DamageType;
+                    if (reg) regionMap.set(reg, dtype);
+                });
+
+                document.querySelectorAll('#custCarBlueprintSvg .cust-car-part').forEach(el => {
+                    const reg = el.getAttribute('data-region');
+                    if (regionMap.has(reg)) {
+                        el.setAttribute('fill', getCustFillGradient(regionMap.get(reg)));
+                    } else {
+                        el.setAttribute('fill', 'url(#cgrad-original)');
+                    }
+                });
+
+                let painted = 0, local = 0, replaced = 0, other = 0;
+                regionMap.forEach(dtype => {
+                    const t = (dtype || "").toLowerCase();
+                    if (t.includes("değişen")) replaced++;
+                    else if (t.includes("lokal")) local++;
+                    else if (t === "boyalı") painted++;
+                    else other++;
+                });
+
+                const totalParts = 13;
+                const original = Math.max(0, totalParts - regionMap.size);
+
+                document.getElementById('custExpOriginal').innerText = `${original} / ${totalParts}`;
+                document.getElementById('custExpPainted').innerText = painted;
+                document.getElementById('custExpLocal').innerText = local;
+                document.getElementById('custExpReplaced').innerText = replaced;
+                document.getElementById('custExpOther').innerText = other;
+
+                listDiv.innerHTML = '';
+                if (customerDamagesCache.length === 0) {
+                    listDiv.innerHTML = `
+                        <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 text-xs text-emerald-400 font-semibold flex items-center">
+                            <i class="fa-solid fa-circle-check mr-2"></i>
+                            <span>Aracınıza ait kayıtlı boya, değişen veya hasar kaydı bulunmamaktadır (Tamamı Orijinal).</span>
+                        </div>
+                    `;
+                    return;
+                }
+
+                customerDamagesCache.forEach(d => {
+                    const reg = d.region || d.Region || '-';
+                    const dtype = d.damageType || d.DamageType || '-';
+                    const desc = d.description || d.Description || '';
+                    const dateStr = new Date(d.date || d.Date || Date.now()).toLocaleDateString('tr-TR');
+
+                    listDiv.innerHTML += `
+                        <div class="bg-slate-900/70 border border-slate-700/80 rounded-xl p-3 flex flex-wrap justify-between items-center gap-2 text-xs">
+                            <div class="space-y-0.5">
+                                <div class="font-bold text-white">${reg} <span class="text-[10px] font-normal text-slate-500 ml-1">(${dateStr})</span></div>
+                                ${desc ? `<div class="text-slate-400">${desc}</div>` : ''}
+                            </div>
+                            <div>${getCustBadgeHtml(dtype)}</div>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                listDiv.innerHTML = `<p class="text-xs text-slate-500">Kaporta bilgisi alınamadı.</p>`;
+            }
         }
     </script>
 </body>

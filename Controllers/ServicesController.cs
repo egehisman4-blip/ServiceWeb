@@ -460,7 +460,7 @@ namespace mepa_servis.Controllers
         [HttpGet("admin/all-shops")]
         public async Task<IActionResult> GetAllShops([FromQuery] string masterKey)
         {
-            if (masterKey != "Ege34Hışman34")
+            if (masterKey != "EGEPATRON2026!")
                 return Unauthorized();
 
             var shops = await _context.Shops

@@ -211,12 +211,12 @@
             <div class="flex justify-between items-center mb-2">
                 <div>
                     <h2 class="text-xl font-bold text-white">Genel Bakış</h2>
-                    <p class="text-xs text-slate-400">Dükkandaki canlı durum, günlük ciro ve bakım zamanı gelen araçlar.</p>
+                    <p class="text-xs text-slate-400">Dükkandaki canlı durum, günlük ciro, aylık performans analizi ve bakım zamanı gelen araçlar.</p>
                 </div>
             </div>
 
             <!-- GÜNLÜK HIZLI ÖZET KARTLARI -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="bg-slate-900 border border-emerald-500/30 p-5 rounded-2xl flex flex-col justify-center">
                     <div class="text-xs text-emerald-400 font-bold uppercase mb-1 flex items-center"><i class="fa-solid fa-coins mr-2"></i>Bugünkü Ciro</div>
                     <div class="text-2xl font-black text-white" id="dashTodayIncome">0.00 ₺</div>
@@ -228,6 +228,103 @@
                 <div class="bg-slate-900 border border-blue-500/30 p-5 rounded-2xl flex flex-col justify-center">
                     <div class="text-xs text-blue-400 font-bold uppercase mb-1 flex items-center"><i class="fa-solid fa-calendar-check mr-2"></i>Sistemdeki Toplam Araç</div>
                     <div class="text-2xl font-black text-white" id="dashTotalVehicles">0</div>
+                </div>
+            </div>
+
+            <!-- AYLIK PERFORMANS & ARAÇ ANALİZİ ÖZETİ -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5">
+                <div class="flex flex-wrap justify-between items-center gap-3 border-b border-slate-800 pb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-white flex items-center">
+                            <i class="fa-solid fa-chart-line text-blue-400 mr-2"></i>Aylık Servis & Kazanç Performansı
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-0.5">Seçilen aya ait servise giren araç sayısı, ciro ve araç başı ortalama gelir analizi.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="monthlyReportPicker" class="text-xs text-slate-400 font-semibold">Dönem:</label>
+                        <input type="month" id="monthlyReportPicker" onchange="renderMonthlyAnalytics()"
+                            class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white font-bold focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <!-- 4 AYLIK KPI KARTI -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-slate-950/80 border border-blue-500/30 p-4 rounded-xl">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[11px] text-blue-400 font-bold uppercase">Bu Ay Gelen Araç</span>
+                            <i class="fa-solid fa-car text-blue-400/70"></i>
+                        </div>
+                        <div class="text-2xl font-black text-white" id="mStatVehicleCount">0 Araç</div>
+                        <div class="text-[11px] text-slate-400 mt-1" id="mStatVehicleDiff">Geçen aya göre veri bekleniyor</div>
+                    </div>
+
+                    <div class="bg-slate-950/80 border border-emerald-500/30 p-4 rounded-xl">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[11px] text-emerald-400 font-bold uppercase">Aylık Toplam Ciro</span>
+                            <i class="fa-solid fa-sack-dollar text-emerald-400/70"></i>
+                        </div>
+                        <div class="text-2xl font-black text-white" id="mStatIncome">0 ₺</div>
+                        <div class="text-[11px] text-slate-400 mt-1" id="mStatIncomeSub">Servis + Manuel Gelirler</div>
+                    </div>
+
+                    <div class="bg-slate-950/80 border border-amber-500/30 p-4 rounded-xl">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[11px] text-amber-400 font-bold uppercase">Aylık Net Kâr</span>
+                            <i class="fa-solid fa-scale-balanced text-amber-400/70"></i>
+                        </div>
+                        <div class="text-2xl font-black text-white" id="mStatNet">0 ₺</div>
+                        <div class="text-[11px] text-slate-400 mt-1" id="mStatExpenseSub">Aylık Gider: 0 ₺</div>
+                    </div>
+
+                    <div class="bg-slate-950/80 border border-purple-500/30 p-4 rounded-xl">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[11px] text-purple-400 font-bold uppercase">Araç Başı Ortalama</span>
+                            <i class="fa-solid fa-calculator text-purple-400/70"></i>
+                        </div>
+                        <div class="text-2xl font-black text-white" id="mStatAvgPerCar">0 ₺</div>
+                        <div class="text-[11px] text-slate-400 mt-1">Araç başına düşen ortalama tutar</div>
+                    </div>
+                </div>
+
+                <!-- HAFTALIK DAĞILIM BARI + O AY GELEN ARAÇLAR LİSTESİ -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-2">
+                    <!-- Sol: Haftalık Ciro & Araç Dağılımı -->
+                    <div class="lg:col-span-5 bg-slate-950/70 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+                        <div>
+                            <div class="text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center justify-between">
+                                <span>Haftalık Ciro & Yoğunluk</span>
+                                <i class="fa-solid fa-chart-column text-blue-400"></i>
+                            </div>
+                            <div id="mWeeklyBars" class="space-y-3"></div>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-800 flex justify-between text-[11px] text-slate-400">
+                            <span>En Yoğun Hafta: <strong id="mBestWeekLabel" class="text-white">-</strong></span>
+                            <span>Tamamlanan İş: <strong id="mCompletedJobs" class="text-emerald-400">0</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- Sağ: Seçilen Ay Servise Gelen Araçlar -->
+                    <div class="lg:col-span-7 bg-slate-950/70 border border-slate-800 rounded-xl p-4">
+                        <div class="text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center justify-between">
+                            <span>Seçilen Ayda İşlem Gören Araçlar</span>
+                            <span id="mMonthNameBadge" class="bg-blue-600/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded text-[10px]">Bu Ay</span>
+                        </div>
+                        <div class="overflow-x-auto max-h-56">
+                            <table class="w-full text-left text-xs text-slate-300">
+                                <thead class="bg-slate-900 text-slate-400 uppercase font-semibold sticky top-0">
+                                    <tr>
+                                        <th class="p-2.5">Tarih</th>
+                                        <th class="p-2.5">Plaka</th>
+                                        <th class="p-2.5">Araç / Müşteri</th>
+                                        <th class="p-2.5 text-right">Tutar</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mVehiclesTableBody" class="divide-y divide-slate-800/70">
+                                    <tr><td colspan="4" class="p-4 text-center text-slate-500">Veriler hesaplanıyor...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -628,21 +725,18 @@
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
                             <!-- İNTERAKTİF 3D GÖLGELİ ARAÇ SVG ŞABLONU -->
                             <div class="md:col-span-7 flex flex-col items-center justify-center bg-slate-950/90 border border-slate-800/90 rounded-2xl p-4 relative">
-                                <!-- Üst Yön Etiketleri -->
                                 <div class="w-full flex justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500 px-3 mb-1">
                                     <span>← Sol Taraf (Sürücü)</span>
                                     <span class="text-blue-400">ÖN</span>
                                     <span>Sağ Taraf (Yolcu) →</span>
                                 </div>
 
-                                <!-- Hover Bilgi Balonu -->
                                 <div id="carHoverTooltip" class="hidden absolute top-9 bg-slate-900/95 border border-slate-700 text-white text-[11px] font-semibold px-3 py-1 rounded-lg shadow-xl pointer-events-none z-20">
                                     Parça Bilgisi
                                 </div>
 
                                 <svg id="carBlueprintSvg" width="320" height="450" viewBox="0 0 320 450" class="max-w-full h-auto select-none">
                                     <defs>
-                                        <!-- 3D Metalik & Eksper Durum Gradyanları -->
                                         <linearGradient id="grad-original" x1="0%" y1="0%" x2="100%" y2="100%">
                                             <stop offset="0%" stop-color="#334155"/>
                                             <stop offset="50%" stop-color="#1e293b"/>
@@ -683,74 +777,59 @@
                                     </defs>
 
                                     <g filter="url(#carDropShadow)">
-                                        <!-- TEKERLEKLER (3D Görsel Detay) -->
                                         <rect x="82" y="76" width="14" height="44" rx="5" fill="#090d16" stroke="#475569" stroke-width="1"/>
                                         <rect x="224" y="76" width="14" height="44" rx="5" fill="#090d16" stroke="#475569" stroke-width="1"/>
                                         <rect x="82" y="324" width="14" height="44" rx="5" fill="#090d16" stroke="#475569" stroke-width="1"/>
                                         <rect x="224" y="324" width="14" height="44" rx="5" fill="#090d16" stroke="#475569" stroke-width="1"/>
 
-                                        <!-- YAN AYNALAR -->
                                         <path d="M 92 152 L 75 158 L 77 168 L 92 164 Z" fill="#1e293b" stroke="#64748b" stroke-width="1.2"/>
                                         <path d="M 228 152 L 245 158 L 243 168 L 228 164 Z" fill="#1e293b" stroke="#64748b" stroke-width="1.2"/>
 
-                                        <!-- 1. ÖN TAMPON -->
                                         <path data-region="Ön Tampon" onclick="selectCarPart('Ön Tampon')"
                                             d="M 102 44 C 102 22, 218 22, 218 44 L 224 58 L 96 58 Z"
                                             fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part car-part-selected"/>
-                                        <!-- Farlar -->
                                         <path d="M 103 44 L 122 48 L 116 54 L 100 51 Z" fill="#38bdf8" opacity="0.85" pointer-events="none"/>
                                         <path d="M 217 44 L 198 48 L 204 54 L 220 51 Z" fill="#38bdf8" opacity="0.85" pointer-events="none"/>
                                         <text x="160" y="42" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="bold" pointer-events="none">ÖN TAMPON</text>
 
-                                        <!-- 2. MOTOR KAPUTU -->
                                         <path data-region="Motor Kaputu" onclick="selectCarPart('Motor Kaputu')"
                                             d="M 102 64 L 218 64 L 212 138 L 108 138 Z"
                                             fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
-                                        <!-- Kaput 3D Kuşak Çizgileri -->
                                         <line x1="126" y1="70" x2="122" y2="132" stroke="#94a3b8" stroke-opacity="0.25" stroke-width="1.2" pointer-events="none"/>
                                         <line x1="194" y1="70" x2="198" y2="132" stroke="#94a3b8" stroke-opacity="0.25" stroke-width="1.2" pointer-events="none"/>
                                         <text x="160" y="105" text-anchor="middle" fill="#f8fafc" font-size="9.5" font-weight="bold" pointer-events="none">KAPUT</text>
 
-                                        <!-- ÖN CAM (Görsel) -->
                                         <path d="M 110 143 L 210 143 L 202 178 L 118 178 Z"
                                             fill="url(#grad-glass)" stroke="#475569" stroke-width="1.2" pointer-events="none"/>
                                         <line x1="126" y1="149" x2="145" y2="172" stroke="#38bdf8" stroke-opacity="0.2" stroke-width="2" pointer-events="none"/>
 
-                                        <!-- 3. TAVAN -->
                                         <rect data-region="Tavan" onclick="selectCarPart('Tavan')"
                                             x="118" y="183" width="84" height="112" rx="8"
                                             fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
                                         <rect x="128" y="194" width="64" height="32" rx="4" fill="none" stroke="#94a3b8" stroke-opacity="0.2" stroke-width="1" pointer-events="none"/>
                                         <text x="160" y="244" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="bold" pointer-events="none">TAVAN</text>
 
-                                        <!-- ARKA CAM (Görsel) -->
                                         <path d="M 118 300 L 202 300 L 210 332 L 110 332 Z"
                                             fill="url(#grad-glass)" stroke="#475569" stroke-width="1.2" pointer-events="none"/>
 
-                                        <!-- 4. BAGAJ KAPAĞI -->
                                         <path data-region="Bagaj Kapağı" onclick="selectCarPart('Bagaj Kapağı')"
                                             d="M 108 337 L 212 337 L 216 388 L 104 388 Z"
                                             fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
                                         <text x="160" y="366" text-anchor="middle" fill="#f8fafc" font-size="9.5" font-weight="bold" pointer-events="none">BAGAJ</text>
 
-                                        <!-- 5. ARKA TAMPON -->
                                         <path data-region="Arka Tampon" onclick="selectCarPart('Arka Tampon')"
                                             d="M 98 394 L 222 394 L 216 414 C 216 428, 104 428, 104 414 Z"
                                             fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
-                                        <!-- Stoplar -->
                                         <path d="M 101 398 L 122 400 L 120 406 L 100 404 Z" fill="#ef4444" opacity="0.9" pointer-events="none"/>
                                         <path d="M 219 398 L 198 400 L 200 406 L 220 404 Z" fill="#ef4444" opacity="0.9" pointer-events="none"/>
                                         <text x="160" y="414" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="bold" pointer-events="none">ARKA TAMPON</text>
 
-                                        <!-- ================= SOL TARAF (AÇILMIŞ 3D KANATLAR) ================= -->
-                                        <!-- 6. SOL ÖN ÇAMURLUK -->
                                         <path data-region="Sol Ön Çamurluk" onclick="selectCarPart('Sol Ön Çamurluk')"
                                             d="M 26 68 L 76 64 L 76 144 L 26 144 C 20 120, 20 92, 26 68 Z"
                                             fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
                                         <text x="51" y="101" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">SOL ÖN</text>
                                         <text x="51" y="112" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">ÇAMURLUK</text>
 
-                                        <!-- 7. SOL ÖN KAPI -->
                                         <path data-region="Sol Ön Kapı" onclick="selectCarPart('Sol Ön Kapı')"
                                             d="M 22 150 L 76 150 L 76 234 L 22 234 Z"
                                             fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
@@ -758,7 +837,6 @@
                                         <text x="49" y="190" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">SOL ÖN</text>
                                         <text x="49" y="201" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">KAPI</text>
 
-                                        <!-- 8. SOL ARKA KAPI -->
                                         <path data-region="Sol Arka Kapı" onclick="selectCarPart('Sol Arka Kapı')"
                                             d="M 22 240 L 76 240 L 76 318 L 28 318 C 23 295, 22 268, 22 240 Z"
                                             fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
@@ -766,22 +844,18 @@
                                         <text x="49" y="276" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">SOL ARKA</text>
                                         <text x="49" y="287" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">KAPI</text>
 
-                                        <!-- 9. SOL ARKA ÇAMURLUK -->
                                         <path data-region="Sol Arka Çamurluk" onclick="selectCarPart('Sol Arka Çamurluk')"
                                             d="M 28 324 L 76 324 L 76 388 L 32 384 C 26 365, 26 344, 28 324 Z"
                                             fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
                                         <text x="52" y="353" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">SOL ARKA</text>
                                         <text x="52" y="364" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">ÇAMURLUK</text>
 
-                                        <!-- ================= SAĞ TARAF (AÇILMIŞ 3D KANATLAR) ================= -->
-                                        <!-- 10. SAĞ ÖN ÇAMURLUK -->
                                         <path data-region="Sağ Ön Çamurluk" onclick="selectCarPart('Sağ Ön Çamurluk')"
                                             d="M 244 64 L 294 68 C 300 92, 300 120, 294 144 L 244 144 Z"
                                             fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
                                         <text x="269" y="101" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">SAĞ ÖN</text>
                                         <text x="269" y="112" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="bold" pointer-events="none">ÇAMURLUK</text>
 
-                                        <!-- 11. SAĞ ÖN KAPI -->
                                         <path data-region="Sağ Ön Kapı" onclick="selectCarPart('Sağ Ön Kapı')"
                                             d="M 244 150 L 298 150 L 298 234 L 244 234 Z"
                                             fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
@@ -789,7 +863,6 @@
                                         <text x="271" y="190" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">SAĞ ÖN</text>
                                         <text x="271" y="201" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">KAPI</text>
 
-                                        <!-- 12. SAĞ ARKA KAPI -->
                                         <path data-region="Sağ Arka Kapı" onclick="selectCarPart('Sağ Arka Kapı')"
                                             d="M 244 240 L 298 240 C 298 268, 297 295, 292 318 L 244 318 Z"
                                             fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
@@ -797,7 +870,6 @@
                                         <text x="271" y="276" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">SAĞ ARKA</text>
                                         <text x="271" y="287" text-anchor="middle" fill="#f8fafc" font-size="8" font-weight="bold" pointer-events="none">KAPI</text>
 
-                                        <!-- 13. SAĞ ARKA ÇAMURLUK -->
                                         <path data-region="Sağ Arka Çamurluk" onclick="selectCarPart('Sağ Arka Çamurluk')"
                                             d="M 244 324 L 292 324 C 294 344, 294 365, 288 384 L 244 388 Z"
                                             fill="url(#grad-original)" stroke="#64748b" stroke-width="1.5" class="car-part"/>
@@ -811,7 +883,6 @@
 
                             <!-- SAĞ: RENK LEJANTI & EKSPER ÖZET RAPORU -->
                             <div class="md:col-span-5 space-y-4">
-                                <!-- Renk Açıklamaları -->
                                 <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4 space-y-2.5">
                                     <div class="text-xs font-bold text-white uppercase tracking-wider mb-2">Eksper Renk Kodları</div>
                                     <div class="grid grid-cols-2 gap-2 text-xs">
@@ -842,7 +913,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Ekspertiz Sayım Özeti -->
                                 <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4 space-y-3">
                                     <div class="text-xs font-bold text-white uppercase tracking-wider flex items-center justify-between">
                                         <span>Kaporta Eksper Özeti</span>
@@ -909,7 +979,6 @@
                 <p class="text-xs text-slate-400">Depodaki parça adetlerini, alış-satış maliyetlerini ve stok alarmını takip edin.</p>
             </div>
 
-            <!-- Stok İstatistikleri -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center space-x-4">
                     <div class="w-10 h-10 bg-blue-500/20 text-blue-400 rounded-lg flex items-center justify-center text-lg"><i class="fa-solid fa-box-open"></i></div>
@@ -935,7 +1004,6 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Stok Ekleme Formu -->
                 <div class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-6 h-fit">
                     <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-plus-circle text-emerald-500 mr-2"></i>Yeni Parça Ekle</h3>
                     <form onsubmit="handleAddStock(event)" class="space-y-4">
@@ -965,7 +1033,6 @@
                     </form>
                 </div>
 
-                <!-- Stok Tablosu -->
                 <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-base font-bold text-white"><i class="fa-solid fa-table-list text-blue-500 mr-2"></i>Güncel Stok Listesi</h3>
@@ -997,7 +1064,6 @@
                 <p class="text-xs text-slate-400">Dükkanın genel muhasebesi, günlük ciro ve nakit akışını izleyin.</p>
             </div>
 
-            <!-- GÜNLÜK FİNANS ÖZETİ -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-b border-slate-800 pb-6">
                 <div class="bg-slate-900 border border-emerald-500/50 p-5 rounded-2xl">
                     <div class="text-xs text-emerald-400 font-bold uppercase mb-1 flex items-center"><i class="fa-solid fa-calendar-day mr-2"></i>Sadece Bugünkü Ciro (GELİR)</div>
@@ -1025,7 +1091,6 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- İşlem Ekleme Formu -->
                 <div class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-6 h-fit">
                     <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-money-bill-transfer text-amber-500 mr-2"></i>Manuel Finans İşlemi</h3>
                     <form onsubmit="handleAddFinance(event)" class="space-y-4">
@@ -1052,7 +1117,6 @@
                     </form>
                 </div>
 
-                <!-- Finans Tablosu -->
                 <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
                     <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-list text-blue-500 mr-2"></i>Son İşlemler Dökümü <span class="text-xs text-slate-500 ml-2 font-normal">(Bugünküler <span class="bg-blue-600 px-1.5 py-0.5 rounded text-white text-[10px] ml-1">BUGÜN</span> ile işaretlenir)</span></h3>
                     <div class="overflow-x-auto max-h-96">
@@ -1082,7 +1146,6 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Randevu Ekleme -->
                 <div class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-6 h-fit">
                     <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-calendar-plus text-blue-500 mr-2"></i>Yeni Randevu Oluştur</h3>
                     <form onsubmit="handleAddAppointment(event)" class="space-y-4">
@@ -1112,7 +1175,6 @@
                     </form>
                 </div>
 
-                <!-- Randevu Listesi -->
                 <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
                     <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-calendar-check text-emerald-500 mr-2"></i>Yaklaşan Randevular</h3>
                     <div class="overflow-x-auto">
@@ -1228,6 +1290,8 @@
         let currentShopId = sessionStorage.getItem("shopId") || null;
         let shopData = { shopName: "OtoServis Pro", phone: "", address: "", iban: "", logoUrl: "" };
         let currentDamageRecords = [];
+        let cachedAllVehicles = [];
+        let cachedAllFinance = [];
 
         const carBrandModels = {
             "Peugeot": ["208", "308", "408", "3008", "5008", "Rifter", "Partner"],
@@ -1301,8 +1365,17 @@
             }
         }
 
+        function initMonthPicker() {
+            const nowIsoMonth = new Date().toISOString().slice(0, 7);
+            const monthPicker = document.getElementById('monthlyReportPicker');
+            if (monthPicker && !monthPicker.value) {
+                monthPicker.value = nowIsoMonth;
+            }
+        }
+
         window.onload = function() {
             initCarBlueprintHover();
+            initMonthPicker();
             if (sessionStorage.getItem("shopAuth") === "true" && currentShopId) {
                 document.getElementById("loginOverlay").classList.add("hidden");
                 document.getElementById("customerScreenLink").href = `/index.html?shopId=${currentShopId}`;
@@ -1367,6 +1440,7 @@
                     document.getElementById("loginOverlay").classList.add("hidden");
                     document.getElementById("customerScreenLink").href = `/index.html?shopId=${currentShopId}`;
 
+                    initMonthPicker();
                     checkSubscriptionWarning();
                     loadShopSettings();
                     fetchUpcomingMaintenances();
@@ -1477,6 +1551,9 @@
                 });
                 if (res.ok) {
                     const list = await res.json();
+                    cachedAllVehicles = list || [];
+                    renderMonthlyAnalytics();
+
                     tbody.innerHTML = '';
                     document.getElementById('dashTotalVehicles').innerText = list.length;
                     
@@ -1829,6 +1906,8 @@
                 document.getElementById('itemDesc').value = '';
                 document.getElementById('itemPrice').value = '';
                 await fetchAdminVehicle();
+                fetchUpcomingMaintenances();
+                fetchFinanceRecords();
             } else {
                 alert('Parça eklenemedi.');
             }
@@ -1843,6 +1922,8 @@
                 });
                 if (res.ok) {
                     await fetchAdminVehicle();
+                    fetchUpcomingMaintenances();
+                    fetchFinanceRecords();
                 } else {
                     alert('Parça silinemedi.');
                 }
@@ -1884,6 +1965,7 @@
 
             if (res.ok) {
                 alert('Durum başarıyla güncellendi!');
+                fetchUpcomingMaintenances();
             } else {
                 alert('Güncelleme hatası.');
             }
@@ -2107,7 +2189,9 @@
                 });
                 if (res.ok) {
                     const records = await res.json();
+                    cachedAllFinance = records || [];
                     renderFinanceView(records);
+                    renderMonthlyAnalytics();
                 }
             } catch (err) {}
         }
@@ -2297,7 +2381,6 @@
                 badge.innerText = regionName;
             }
 
-            // Eğer sorgulama kutusunda plaka varsa ama kayıt kutusu boşsa otomatik aktar
             const searchVal = document.getElementById('damageSearchPlate')?.value.trim().toUpperCase();
             const plateInput = document.getElementById('damagePlate');
             if (searchVal && plateInput && !plateInput.value.trim()) {
@@ -2372,7 +2455,6 @@
             currentDamageRecords = records || [];
             const regionStatusMap = new Map();
 
-            // Her parça için kaydedilmiş son/en kritik işlemi eşle
             currentDamageRecords.forEach(d => {
                 const reg = d.region || d.Region;
                 const dtype = d.damageType || d.DamageType;
@@ -2381,7 +2463,6 @@
                 }
             });
 
-            // Tüm 13 parçayı güncelle
             document.querySelectorAll('#carBlueprintSvg .car-part').forEach(el => {
                 const reg = el.getAttribute('data-region');
                 if (regionStatusMap.has(reg)) {
@@ -2391,7 +2472,6 @@
                 }
             });
 
-            // Ekspertiz sayım özetini güncelle
             let painted = 0, local = 0, replaced = 0, other = 0;
             regionStatusMap.forEach(dtype => {
                 const t = (dtype || "").toLowerCase();
@@ -2422,7 +2502,6 @@
             const cleanPlate = plate.replace(/\s+/g, '').toUpperCase();
             plateInput.value = cleanPlate;
 
-            // Sol formdaki plaka kutusunu da otomatik doldur
             const addPlateInput = document.getElementById('damagePlate');
             if (addPlateInput) addPlateInput.value = cleanPlate;
 
@@ -2535,7 +2614,6 @@
             document.getElementById('expPdfPlate').innerText = plate;
             document.getElementById('expPdfFooter').innerText = `Bu ekspertiz raporu ${activeShopName} tarafından oluşturulmuştur.`;
 
-            // SVG şablonunu PDF içine klonla (seçim halkasını kaldırarak)
             const svgClone = document.getElementById('carBlueprintSvg').cloneNode(true);
             svgClone.querySelectorAll('.car-part-selected').forEach(el => el.classList.remove('car-part-selected'));
             svgClone.setAttribute('width', '250');
@@ -2544,7 +2622,6 @@
             holder.innerHTML = '';
             holder.appendChild(svgClone);
 
-            // Özet kutusunu doldur
             document.getElementById('expPdfSummaryBox').innerHTML = `
                 <div class="flex justify-between"><span>Orijinal Parça:</span><strong>${document.getElementById('expCountOriginal').innerText}</strong></div>
                 <div class="flex justify-between text-blue-700"><span>Boyalı Parça:</span><strong>${document.getElementById('expCountPainted').innerText}</strong></div>
@@ -2553,7 +2630,6 @@
                 <div class="flex justify-between text-amber-700"><span>Çizik / Göçük / Diğer:</span><strong>${document.getElementById('expCountOther').innerText}</strong></div>
             `;
 
-            // Kayıt listesini doldur
             const listBox = document.getElementById('expPdfList');
             listBox.innerHTML = '';
             if (currentDamageRecords.length === 0) {
@@ -2577,6 +2653,196 @@
 
             const element = document.getElementById('inspectionPdfTemplate');
             html2pdf().from(element).save(`Ekspertiz_Raporu_${plate}.pdf`);
+        }
+
+        // ================= AYLIK ARAÇ & CİRO ANALİZ MOTORU ================= //
+
+        function renderMonthlyAnalytics() {
+            const picker = document.getElementById('monthlyReportPicker');
+            if (!picker) return;
+            if (!picker.value) picker.value = new Date().toISOString().slice(0, 7);
+
+            const [yearStr, monthStr] = picker.value.split('-');
+            const targetYear = parseInt(yearStr);
+            const targetMonth = parseInt(monthStr) - 1;
+
+            const prevDate = new Date(targetYear, targetMonth - 1, 1);
+            const prevYear = prevDate.getFullYear();
+            const prevMonth = prevDate.getMonth();
+
+            const monthNamesTR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+            const badge = document.getElementById('mMonthNameBadge');
+            if (badge) badge.innerText = `${monthNamesTR[targetMonth]} ${targetYear}`;
+
+            const monthVehicleEntries = [];
+            const uniquePlatesThisMonth = new Set();
+            const uniquePlatesPrevMonth = new Set();
+            let completedJobsCount = 0;
+
+            const weeks = [
+                { label: "1. Hafta (1-7)", cars: 0, income: 0 },
+                { label: "2. Hafta (8-14)", cars: 0, income: 0 },
+                { label: "3. Hafta (15-21)", cars: 0, income: 0 },
+                { label: "4. Hafta (22-31)", cars: 0, income: 0 }
+            ];
+
+            cachedAllVehicles.forEach(v => {
+                const plate = v.plaka || v.Plaka || v.plate || v.Plate || "-";
+                const brand = v.marka || v.Marka || v.brand || v.Brand || "";
+                const model = v.model || v.Model || "";
+                const owner = v.musteriAdSoyad || v.MusteriAdSoyad || v.ownerName || v.OwnerName || "";
+                const records = v.serviceRecords || v.ServiceRecords || [];
+
+                if (records.length > 0) {
+                    records.forEach(r => {
+                        const rawDate = r.entryDate || r.EntryDate || r.date || r.Date;
+                        if (!rawDate) return;
+                        const d = new Date(rawDate);
+                        const cost = parseFloat(r.totalCost || r.TotalCost || 0);
+                        const st = r.status || r.Status || 1;
+
+                        if (d.getFullYear() === targetYear && d.getMonth() === targetMonth) {
+                            uniquePlatesThisMonth.add(plate);
+                            if (st === 6) completedJobsCount++;
+
+                            const wIdx = Math.min(3, Math.floor((d.getDate() - 1) / 7));
+                            weeks[wIdx].cars += 1;
+
+                            monthVehicleEntries.push({
+                                dateObj: d,
+                                plate,
+                                carTitle: `${brand} ${model}`.trim(),
+                                owner,
+                                cost,
+                                status: st
+                            });
+                        } else if (d.getFullYear() === prevYear && d.getMonth() === prevMonth) {
+                            uniquePlatesPrevMonth.add(plate);
+                        }
+                    });
+                } else {
+                    const fallbackDate = v.lastKmUpdateDate || v.LastKmUpdateDate || v.createdDate || v.CreatedDate;
+                    if (fallbackDate) {
+                        const d = new Date(fallbackDate);
+                        if (d.getFullYear() === targetYear && d.getMonth() === targetMonth) {
+                            uniquePlatesThisMonth.add(plate);
+                            const wIdx = Math.min(3, Math.floor((d.getDate() - 1) / 7));
+                            weeks[wIdx].cars += 1;
+                            monthVehicleEntries.push({
+                                dateObj: d,
+                                plate,
+                                carTitle: `${brand} ${model}`.trim(),
+                                owner,
+                                cost: 0,
+                                status: 1
+                            });
+                        }
+                    }
+                }
+            });
+
+            let monthIncome = 0;
+            let monthExpense = 0;
+
+            cachedAllFinance.forEach(f => {
+                const rawDate = f.date || f.Date;
+                if (!rawDate) return;
+                const d = new Date(rawDate);
+                if (d.getFullYear() === targetYear && d.getMonth() === targetMonth) {
+                    const isInc = (f.type === 'Gelir' || f.type === 'income');
+                    const amt = parseFloat(f.amount || 0);
+                    if (isInc) {
+                        monthIncome += amt;
+                        const wIdx = Math.min(3, Math.floor((d.getDate() - 1) / 7));
+                        weeks[wIdx].income += amt;
+                    } else {
+                        monthExpense += amt;
+                    }
+                }
+            });
+
+            const serviceRecordsSum = monthVehicleEntries.reduce((acc, item) => acc + item.cost, 0);
+            const effectiveIncome = monthIncome > 0 ? monthIncome : serviceRecordsSum;
+            if (monthIncome === 0 && serviceRecordsSum > 0) {
+                monthVehicleEntries.forEach(item => {
+                    const wIdx = Math.min(3, Math.floor((item.dateObj.getDate() - 1) / 7));
+                    weeks[wIdx].income += item.cost;
+                });
+            }
+
+            const totalCars = uniquePlatesThisMonth.size || monthVehicleEntries.length;
+            const prevCars = uniquePlatesPrevMonth.size;
+            const netProfit = effectiveIncome - monthExpense;
+            const avgPerCar = totalCars > 0 ? (effectiveIncome / totalCars) : 0;
+
+            document.getElementById('mStatVehicleCount').innerText = `${totalCars} Araç`;
+            const diffEl = document.getElementById('mStatVehicleDiff');
+            if (prevCars === 0) {
+                diffEl.innerText = `Toplam ${monthVehicleEntries.length} servis girişi`;
+                diffEl.className = "text-[11px] text-slate-400 mt-1";
+            } else {
+                const diff = totalCars - prevCars;
+                diffEl.innerText = diff >= 0
+                    ? `Geçen aya göre +${diff} araç artış`
+                    : `Geçen aya göre ${diff} araç azalış`;
+                diffEl.className = `text-[11px] mt-1 font-semibold ${diff >= 0 ? 'text-emerald-400' : 'text-red-400'}`;
+            }
+
+            document.getElementById('mStatIncome').innerText = `${effectiveIncome.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ₺`;
+            document.getElementById('mStatNet').innerText = `${netProfit.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ₺`;
+            document.getElementById('mStatNet').className = `text-2xl font-black ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`;
+            document.getElementById('mStatExpenseSub').innerText = `Aylık Gider: ${monthExpense.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ₺`;
+            document.getElementById('mStatAvgPerCar').innerText = `${avgPerCar.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ₺`;
+            document.getElementById('mCompletedJobs').innerText = `${completedJobsCount} / ${monthVehicleEntries.length}`;
+
+            const barsContainer = document.getElementById('mWeeklyBars');
+            barsContainer.innerHTML = '';
+            const maxWeekIncome = Math.max(...weeks.map(w => w.income), 1);
+            let bestWeek = weeks[0];
+
+            weeks.forEach(w => {
+                if (w.income > bestWeek.income || (w.income === bestWeek.income && w.cars > bestWeek.cars)) {
+                    bestWeek = w;
+                }
+                const pct = Math.round((w.income / maxWeekIncome) * 100);
+                barsContainer.innerHTML += `
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[11px]">
+                            <span class="text-slate-300 font-medium">${w.label} <span class="text-slate-500">(${w.cars} araç)</span></span>
+                            <span class="font-mono font-bold text-emerald-400">${w.income.toLocaleString('tr-TR')} ₺</span>
+                        </div>
+                        <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
+                            <div class="bg-gradient-to-r from-blue-600 to-emerald-500 h-2 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('mBestWeekLabel').innerText = (bestWeek.income > 0 || bestWeek.cars > 0) ? bestWeek.label : "-";
+
+            const tbody = document.getElementById('mVehiclesTableBody');
+            tbody.innerHTML = '';
+
+            if (monthVehicleEntries.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">Bu dönem için kayıtlı araç girişi bulunmuyor.</td></tr>`;
+                return;
+            }
+
+            monthVehicleEntries
+                .sort((a, b) => b.dateObj - a.dateObj)
+                .forEach(item => {
+                    const dStr = item.dateObj.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-800/70 transition-all">
+                            <td class="p-2.5 text-slate-400 font-mono">${dStr}</td>
+                            <td class="p-2.5 font-mono font-bold text-blue-400">${item.plate}</td>
+                            <td class="p-2.5">
+                                <div class="text-white font-semibold">${item.carTitle || '-'}</div>
+                                <div class="text-[10px] text-slate-400">${item.owner}</div>
+                            </td>
+                            <td class="p-2.5 text-right font-mono font-bold text-emerald-400">${item.cost.toLocaleString('tr-TR')} ₺</td>
+                        </tr>
+                    `;
+                });
         }
     </script>
 </body>
